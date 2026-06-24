@@ -267,7 +267,7 @@ void DialogueLevelerAudioProcessorEditor::resized()
     // 13 knobs across the width
     constexpr int kNumKnobs = 13;
     const int slotW = W / kNumKnobs;
-    constexpr int kNameH = 14, kKnobH = 108;
+    constexpr int kNameH = 22, kKnobH = 108;
     const int knobY = kCtrlY + kNameH;
 
     juce::Slider* knobs[] = {
@@ -351,7 +351,7 @@ void DialogueLevelerAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
     g.setColour(kTextLo);
     for (int i = 0; i < 13; ++i)
-        g.drawText(allNames[i], i * slotW, kCtrlY + 14, slotW, 12,
+        g.drawText(allNames[i], i * slotW, kCtrlY + 22, slotW, 12,
                    juce::Justification::centred, false);
 }
 
@@ -367,9 +367,11 @@ void DialogueLevelerAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
     constexpr int kStatsY  = kMeterY + kMeterH + 4;
     constexpr int kStatsH  = 40;
     constexpr int kCtrlY   = kStatsY + kStatsH + 6;
-    constexpr int kNameH   = 14;
+    constexpr int kNameH   = 22;
     constexpr int kLedSize = 8;
-    const int ledY = kCtrlY + (kNameH - kLedSize) / 2;
+    // Place LED in the lower portion of the header area, below the group label text
+    // (which occupies the top 13px) and above the knob names (which start at kCtrlY+22).
+    const int ledY = kCtrlY + kNameH - kLedSize;
 
     const double now      = juce::Time::getMillisecondCounterHiRes();
     const bool boostLit   = (now - lastBoostClipMs < 500.0);
