@@ -1,0 +1,9 @@
+# CMake build tree — contains compiled output, CMake cache, and the
+# downloaded JUCE source (~450 MB). Rebuilt with `cmake -B build`.
+build/
+
+# Claude Code project memory — personal notes, not part of the plugin source.
+.claude/
+
+# Prompt file used during development
+dialogue-leveler-claude-code-prompt.md

@@ -1,0 +1,74 @@
+cmake_minimum_required(VERSION 3.22)
+project(DialogueLeveler VERSION 1.0.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# --------------------------------------------------------------------------
+# Fetch JUCE — no manual SDK install required
+# --------------------------------------------------------------------------
+include(FetchContent)
+FetchContent_Declare(
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        8.0.14
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(JUCE)
+
+# --------------------------------------------------------------------------
+# Plugin target — VST3 + Standalone only
+# --------------------------------------------------------------------------
+juce_add_plugin(DialogueLeveler
+    VERSION                     1.0.0
+    COMPANY_NAME                "Personal"
+    PLUGIN_MANUFACTURER_CODE    Pers
+    PLUGIN_CODE                 Dlvl
+    FORMATS                     VST3 Standalone
+    PRODUCT_NAME                "DialogueLeveler"
+    PLUGIN_NAME                 "DialogueLeveler"
+    DESCRIPTION                 "Automatic dialogue loudness leveler"
+    VST3_CATEGORIES             "Fx" "Dynamics"
+    IS_SYNTH                    FALSE
+    NEEDS_MIDI_INPUT            FALSE
+    NEEDS_MIDI_OUTPUT           FALSE
+    IS_MIDI_EFFECT              FALSE
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE
+    COPY_PLUGIN_AFTER_BUILD     FALSE
+)
+
+juce_generate_juce_header(DialogueLeveler)
+
+# --------------------------------------------------------------------------
+# Sources
+# --------------------------------------------------------------------------
+target_sources(DialogueLeveler PRIVATE
+    Source/PluginProcessor.cpp
+    Source/PluginEditor.cpp
+)
+
+# --------------------------------------------------------------------------
+# Compile definitions
+# --------------------------------------------------------------------------
+target_compile_definitions(DialogueLeveler
+    PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_VST3_CAN_REPLACE_VST2=0
+)
+
+# --------------------------------------------------------------------------
+# Link JUCE modules
+# juce_audio_utils pulls in: audio_basics, audio_devices, audio_formats,
+# audio_processors, core, events, graphics, gui_basics, gui_extra
+# --------------------------------------------------------------------------
+target_link_libraries(DialogueLeveler
+    PRIVATE
+        juce::juce_audio_utils
+        juce::juce_dsp
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags
+        # LTO only in Release — enabling it in Debug builds makes incremental compiles very slow
+        $<$<CONFIG:Release,RelWithDebInfo>:juce::juce_recommended_lto_flags>
+)
