@@ -63,6 +63,11 @@ Source: "{#VST3Src}\Contents\Resources\moduleinfo.json"; \
     DestDir: "{commonpf64}\VST3\DialogueLeveler.vst3\Contents\Resources"; \
     Flags: ignoreversion
 
+[InstallDelete]
+; Remove the entire bundle before each install so stale files from older
+; versions don't persist inside the bundle and confuse DAW plugin scanners.
+Type: filesandordirs; Name: "{commonpf64}\VST3\DialogueLeveler.vst3"
+
 [UninstallDelete]
 ; Remove the entire bundle folder on uninstall
 Type: filesandordirs; Name: "{commonpf64}\VST3\DialogueLeveler.vst3"
