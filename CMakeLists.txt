@@ -21,8 +21,8 @@ FetchContent_MakeAvailable(JUCE)
 # --------------------------------------------------------------------------
 juce_add_plugin(DialogueLeveler
     VERSION                     1.0.0
-    COMPANY_NAME                "Personal"
-    PLUGIN_MANUFACTURER_CODE    Pers
+    COMPANY_NAME                "sahko123"
+    PLUGIN_MANUFACTURER_CODE    Sahk
     PLUGIN_CODE                 Dlvl
     FORMATS                     VST3 Standalone
     PRODUCT_NAME                "DialogueLeveler"
