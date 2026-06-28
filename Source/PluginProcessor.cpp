@@ -141,7 +141,9 @@ bool DialogueLevelerAudioProcessor::isMidiEffect() const { return false; }
 double DialogueLevelerAudioProcessor::getTailLengthSeconds() const
 {
     // Tail = lookahead samples still buffered after the host's last input sample.
-    return static_cast<double>(currentLookaheadSamples) / currentSampleRate;
+    // Use the atomic mirrors so this is safe to call from any thread.
+    return static_cast<double>(tailLookaheadSamples.load(std::memory_order_relaxed))
+           / tailSampleRate.load(std::memory_order_relaxed);
 }
 
 int  DialogueLevelerAudioProcessor::getNumPrograms()                            { return 1; }
@@ -219,6 +221,8 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
     currentLookaheadSamples = juce::jlimit(0, maxDelaySamples - 1,
         juce::roundToInt(lookaheadMs * sampleRate / 1000.0));
     setLatencySamples(currentLookaheadSamples);
+    tailSampleRate.store(sampleRate, std::memory_order_relaxed);
+    tailLookaheadSamples.store(currentLookaheadSamples, std::memory_order_relaxed);
 
     resetNeeded.store(false, std::memory_order_relaxed);
 }

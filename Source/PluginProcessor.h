@@ -127,6 +127,11 @@ private:
     int lookaheadWritePos       = 0;
     int currentLookaheadSamples = 0;
 
+    // Atomic mirrors of currentSampleRate and currentLookaheadSamples for use by
+    // getTailLengthSeconds(), which may be called from a different thread than prepareToPlay.
+    std::atomic<double> tailSampleRate      { 44100.0 };
+    std::atomic<int>    tailLookaheadSamples { 0 };
+
     // Set on message thread (setStateInformation), checked+cleared on audio thread
     std::atomic<bool> resetNeeded { false };
 
