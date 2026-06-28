@@ -566,6 +566,18 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
             --primingSamplesRemaining;
     }
 
+    // Keep the lookahead delay line primed so un-bypass is seamless.
+    // Without this, stale/zero samples would play out on the first post-bypass block.
+    if (currentLookaheadSamples > 0)
+    {
+        for (int s = 0; s < numSamples; ++s)
+        {
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+                lookaheadBuffer.setSample(ch, lookaheadWritePos, buffer.getSample(ch, s));
+            lookaheadWritePos = (lookaheadWritePos + 1) % maxDelaySamples;
+        }
+    }
+
     const float bypassMeasuredDb = detector.getLoudnessDb();
     currentAppliedGainDb.store(0.0f,            std::memory_order_relaxed);
     currentMeasuredLufs .store(bypassMeasuredDb, std::memory_order_relaxed);
