@@ -86,7 +86,7 @@ public:
     {
         const double meanSquare = runningSum / static_cast<double>(windowSamples);
         if (meanSquare < 1e-10) return -100.0f;
-        return static_cast<float>(10.0 * std::log10(meanSquare));
+        return static_cast<float>(-0.691 + 10.0 * std::log10(meanSquare));
     }
 
 private:
