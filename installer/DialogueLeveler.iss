@@ -5,9 +5,13 @@
 ; Build from repo root:
 ;   "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer\DialogueLeveler.iss
 
-#define AppName     "Dialogue Leveler"
-#define AppVersion  "1.0.0"
+#define AppName      "Dialogue Leveler"
 #define AppPublisher "sahko123"
+; AppVersion can be overridden from the command line: iscc /DAppVersion=1.2.0 ...
+; Falls back to 1.0.0 when building locally without the flag.
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
 #define AppURL      "https://yourdomain.com"
 #define VST3Src     "..\build\DialogueLeveler_artefacts\Release\VST3\DialogueLeveler.vst3"
 
