@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2025 sahko123 — Dialogue Leveler VST3
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
@@ -29,7 +31,8 @@ public:
 
 private:
     void timerCallback() override;
-    void paintGraph(juce::Graphics& g, juce::Rectangle<int> area, float rangeDb) const;
+    void paintCombined(juce::Graphics& g, juce::Rectangle<int> area,
+                       float targetLufs, float gateThreshDb, float rangeDb) const;
 
     DialogueLevelerAudioProcessor& proc;
     DlLookAndFeel laf;
@@ -54,9 +57,11 @@ private:
     juce::TextButton btnResetPeak { "Reset" };
     juce::TextButton btnResetAvg  { "Reset" };
 
-    // ── Scrolling graph ───────────────────────────────────────────────────────
+    // ── Scrolling graphs (gain + LUFS level, same ring buffer / head) ────────
     static constexpr int kGraphPoints = 500;
-    std::array<float, kGraphPoints> graphGain {};
+    std::array<float,     kGraphPoints> graphGain {};
+    std::array<float,     kGraphPoints> graphLufs {};  // raw measured LUFS per frame
+    std::array<GateState, kGraphPoints> graphGate {};  // per-frame gate state
     int  graphHead = 0;
     bool graphFull = false;
 

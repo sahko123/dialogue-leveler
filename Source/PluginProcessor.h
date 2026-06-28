@@ -1,6 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2025 sahko123 — Dialogue Leveler VST3
 #pragma once
 #include <JuceHeader.h>
 #include "DSP/LoudnessDetector.h"
+
+enum class GateState : uint8_t { Active, InHold, Frozen };
 
 class DialogueLevelerAudioProcessor : public juce::AudioProcessor
 {
@@ -62,10 +66,11 @@ public:
 
     // Lock-free FIFO for the scrolling gain graph (one frame per audio block).
     // GUI timer drains it; audio thread fills it.
-    struct GainFrame { float gainDb; float lufsIn; };
+    struct GainFrame { float gainDb; float lufsIn; GateState gate; };
     static constexpr int kFifoCapacity = 1024;
     juce::AbstractFifo gainFifo { kFifoCapacity };
     GainFrame gainFifoBuffer[kFifoCapacity];
+
 
 private:
     // Cached raw param pointers — set in ctor, read lock-free on audio thread.

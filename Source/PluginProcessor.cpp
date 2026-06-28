@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2025 sahko123 — Dialogue Leveler VST3
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -513,7 +515,11 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     {
         int s1, n1, s2, n2;
         gainFifo.prepareToWrite(1, s1, n1, s2, n2);
-        if (n1 > 0) gainFifoBuffer[s1] = { smoothedGainDb, lastMeasuredDb };
+        GateState gs;
+        if (lastMeasuredDb >= gateThreshDb)   gs = GateState::Active;
+        else if (gateHoldSamplesRemaining > 0) gs = GateState::InHold;
+        else                                   gs = GateState::Frozen;
+        if (n1 > 0) gainFifoBuffer[s1] = { smoothedGainDb, lastMeasuredDb, gs };
         gainFifo.finishedWrite(n1 + n2);
     }
 }
@@ -567,7 +573,7 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
     {
         int s1, n1, s2, n2;
         gainFifo.prepareToWrite(1, s1, n1, s2, n2);
-        if (n1 > 0) gainFifoBuffer[s1] = { 0.0f, bypassMeasuredDb };
+        if (n1 > 0) gainFifoBuffer[s1] = { 0.0f, bypassMeasuredDb, GateState::Active };
         gainFifo.finishedWrite(n1 + n2);
     }
 }

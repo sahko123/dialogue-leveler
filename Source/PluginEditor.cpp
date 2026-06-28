@@ -1,31 +1,35 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2025 sahko123 — Dialogue Leveler VST3
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 //==============================================================================
-static const juce::Colour kBg       { 0xff1a1a2e };
-static const juce::Colour kSurface  { 0xff111126 };
-static const juce::Colour kTrack    { 0xff2a2a4a };
-static const juce::Colour kAccent   { 0xff00b4c8 };
-static const juce::Colour kAccentDim{ 0xff006878 };
-static const juce::Colour kTextHi   { 0xffe0e0f0 };
-static const juce::Colour kTextLo   { 0xff606080 };
-static const juce::Colour kGridLine { 0xff252545 };
-static const juce::Colour kBoost    { 0xff00b4c8 };
-static const juce::Colour kCut      { 0xfff08040 };
-static const juce::Colour kClipOn   { 0xffff3030 };
-static const juce::Colour kClipOff  { 0xff2a1a1a };
+static const juce::Colour kBg       { 0xfff0ead8 };  // warm paper cream
+static const juce::Colour kSurface  { 0xffe8e2d0 };  // inset panel
+static const juce::Colour kTrack    { 0xffc4bcb0 };  // knob track ring
+static const juce::Colour kAccent   { 0xff4a6282 };  // steel blue — gain waveform + UI
+static const juce::Colour kAccentDim{ 0xff344862 };  // darker steel blue — section headers
+static const juce::Colour kTextHi   { 0xff262016 };  // near-black ink
+static const juce::Colour kTextLo   { 0xff847870 };  // warm mid-gray
+static const juce::Colour kGridLine { 0xffd0c8bc };  // light warm grid lines
+static const juce::Colour kBoost    { 0xff4a6282 };  // positive gain (= kAccent)
+static const juce::Colour kCut      { 0xffaa4428 };  // muted rust — gate / negative
+static const juce::Colour kClipOn   { 0xffcc2828 };  // red clip LED
+static const juce::Colour kClipOff  { 0xffddd5c8 };  // dim clip LED
+static const juce::Colour kWaveform { 0xff2a6050 };  // dark teal — LUFS active waveform
+static const juce::Colour kTarget   { 0xff7050a8 };  // muted violet — target LUFS line
 
 //==============================================================================
 DlLookAndFeel::DlLookAndFeel()
 {
-    setColour(juce::Slider::textBoxTextColourId,       juce::Colour(0xffe0e0f0));
-    setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xff111126));
+    setColour(juce::Slider::textBoxTextColourId,       juce::Colour(0xff262016));
+    setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xffe8e2d0));
     setColour(juce::Slider::textBoxOutlineColourId,    juce::Colour(0x00000000));
-    setColour(juce::Slider::textBoxHighlightColourId,  juce::Colour(0xff006878));
-    setColour(juce::Label::textColourId,               juce::Colour(0xff606080));
-    setColour(juce::TooltipWindow::backgroundColourId, juce::Colour(0xff1e1e38));
-    setColour(juce::TooltipWindow::textColourId,       juce::Colour(0xffe0e0f0));
-    setColour(juce::TooltipWindow::outlineColourId,    juce::Colour(0xff404060));
+    setColour(juce::Slider::textBoxHighlightColourId,  juce::Colour(0xffa0b4cc));
+    setColour(juce::Label::textColourId,               juce::Colour(0xff847870));
+    setColour(juce::TooltipWindow::backgroundColourId, juce::Colour(0xfff0ead8));
+    setColour(juce::TooltipWindow::textColourId,       juce::Colour(0xff262016));
+    setColour(juce::TooltipWindow::outlineColourId,    juce::Colour(0xffc4bcb0));
 }
 
 void DlLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w, int h,
@@ -49,7 +53,7 @@ void DlLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int w, int
     g.strokePath(arc, juce::PathStrokeType(3.0f, juce::PathStrokeType::curved,
                                             juce::PathStrokeType::rounded));
 
-    g.setColour(juce::Colour(0xff202038));
+    g.setColour(juce::Colour(0xffe8e2d0));
     g.fillEllipse(cx - r * 0.68f, cy - r * 0.68f, r * 1.36f, r * 1.36f);
 
     const float px = cx + r * 0.52f * std::sin(angle);
@@ -231,8 +235,8 @@ void DialogueLevelerAudioProcessorEditor::resized()
     btnDelete.setBounds(W -  68, 4, 60, 20);
     presetBox.setBounds(W - 372, 4, 232, 20);
 
-    constexpr int kGraphY  = 28;
-    constexpr int kGraphH  = 145;
+    constexpr int kGraphY  = 100;
+    constexpr int kGraphH  = 73;
     constexpr int kMeterY  = kGraphY + kGraphH + 4;
     constexpr int kMeterH  = 36;
     constexpr int kStatsY  = kMeterY + kMeterH + 4;
@@ -290,15 +294,17 @@ void DialogueLevelerAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(juce::Font(juce::FontOptions().withHeight(15.0f)));
     g.drawText("DIALOGUE LEVELER", 10, 6, W - 20, 18, juce::Justification::left, false);
 
-    // Graph — range tracks the current Max Boost / Max Attenuation params
-    constexpr int kGraphY = 28, kGraphH = 145;
-    const float maxBoost = proc.apvts.getRawParameterValue("maxBoost")->load(std::memory_order_relaxed);
-    const float maxAtten = proc.apvts.getRawParameterValue("maxAttenuation")->load(std::memory_order_relaxed);
-    const float graphRange = juce::jmax(maxBoost, maxAtten) * 1.1f;
-    paintGraph(g, { 0, kGraphY, W, kGraphH }, graphRange);
+    // Combined waveform view: INPUT LUFS (left axis) + GAIN dB (right axis), 145px total
+    constexpr int kCombY = 28, kCombH = 145;
+    const float maxBoost     = proc.apvts.getRawParameterValue("maxBoost")->load(std::memory_order_relaxed);
+    const float maxAtten     = proc.apvts.getRawParameterValue("maxAttenuation")->load(std::memory_order_relaxed);
+    const float targetLufs   = proc.apvts.getRawParameterValue("targetLufs")->load(std::memory_order_relaxed);
+    const float gateThreshDb = proc.apvts.getRawParameterValue("gateThreshold")->load(std::memory_order_relaxed);
+    const float graphRange   = juce::jmax(maxBoost, maxAtten) * 1.1f;
+    paintCombined(g, { 0, kCombY, W, kCombH }, targetLufs, gateThreshDb, graphRange);
 
     // Meter separator lines
-    constexpr int kMeterY = kGraphY + kGraphH + 4;
+    constexpr int kMeterY = kCombY + kCombH + 4;  // = 177, unchanged
     g.setColour(kGridLine);
     const int col = W / 3;
     g.drawVerticalLine(col,   kMeterY, kMeterY + 36);
@@ -361,7 +367,7 @@ void DialogueLevelerAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
     const int W = getWidth();
     const int slotW = W / 13;
 
-    constexpr int kGraphY  = 28, kGraphH = 145;
+    constexpr int kGraphY  = 100, kGraphH = 73;
     constexpr int kMeterY  = kGraphY + kGraphH + 4;
     constexpr int kMeterH  = 36;
     constexpr int kStatsY  = kMeterY + kMeterH + 4;
@@ -393,59 +399,229 @@ void DialogueLevelerAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
 }
 
 //==============================================================================
-void DialogueLevelerAudioProcessorEditor::paintGraph(juce::Graphics& g,
-                                                      juce::Rectangle<int> area,
-                                                      float rangeDb) const
+void DialogueLevelerAudioProcessorEditor::paintCombined(
+    juce::Graphics& g, juce::Rectangle<int> area,
+    float targetLufs, float gateThreshDb, float rangeDb) const
 {
     const int x0 = area.getX(), y0 = area.getY();
-    const int W = area.getWidth(), H = area.getHeight();
-    const float cy    = y0 + H * 0.5f;
-    const float scale = (H * 0.46f) / rangeDb;
+    const int W  = area.getWidth(), H = area.getHeight();
+
+    // Left axis: LUFS (0 at top, -60 at bottom)
+    constexpr float kTopLufs = 0.0f, kBotLufs = -60.0f;
+    const float lufsScale = (float)H / (kTopLufs - kBotLufs);
+    auto lufsToY = [&](float lufs) -> float {
+        return y0 + (kTopLufs - juce::jlimit(kBotLufs, kTopLufs, lufs)) * lufsScale;
+    };
+
+    // Right axis: gain dB centred at 0
+    const float gcy    = y0 + H * 0.5f;
+    const float gscale = (H * 0.46f) / rangeDb;
+    auto gainToY = [&](float db) -> float {
+        return gcy - juce::jlimit(-rangeDb, rangeDb, db) * gscale;
+    };
 
     g.setColour(kSurface);
     g.fillRect(area);
 
-    // Choose grid tick interval based on range
-    const float tickDb = rangeDb <= 15.0f ? 3.0f : rangeDb <= 30.0f ? 6.0f : 12.0f;
+    const int numPts = graphFull ? kGraphPoints : graphHead;
+    const int si     = graphFull ? graphHead : 0;
+    constexpr int kLaneH = 6;
+    const int laneY = y0 + H - kLaneH;
 
+    // ── Gate-state tint (background) and lane (bottom strip) ─────────────────
+    // Three visual states per frame:
+    //   Active  → dim green lane, no tint
+    //   InHold  → orange lane, orange tint (signal below threshold, hold counting down)
+    //   Frozen  → bright green lane, green tint (hold expired, gain is frozen)
+    {
+        int blockStart = -1;
+        GateState blockState = GateState::Active;
+
+        auto drawBlock = [&](int from, int to, GateState st)
+        {
+            const float px1 = x0 + (float)from * W / kGraphPoints;
+            const float px2 = x0 + (float)to   * W / kGraphPoints;
+            switch (st)
+            {
+                case GateState::Active:
+                    g.setColour(kWaveform.withAlpha(0.18f));
+                    g.fillRect(px1, (float)laneY, px2 - px1, (float)kLaneH);
+                    break;
+                case GateState::InHold:
+                    g.setColour(kCut.withAlpha(0.07f));
+                    g.fillRect(px1, (float)y0, px2 - px1, (float)(H - kLaneH));
+                    g.setColour(kCut.withAlpha(0.50f));
+                    g.fillRect(px1, (float)laneY, px2 - px1, (float)kLaneH);
+                    break;
+                case GateState::Frozen:
+                    g.setColour(kWaveform.withAlpha(0.07f));
+                    g.fillRect(px1, (float)y0, px2 - px1, (float)(H - kLaneH));
+                    g.setColour(kWaveform.withAlpha(0.65f));
+                    g.fillRect(px1, (float)laneY, px2 - px1, (float)kLaneH);
+                    break;
+            }
+        };
+
+        for (int i = 0; i <= numPts; ++i)
+        {
+            const bool atEnd   = (i == numPts);
+            const int  idx     = atEnd ? 0 : (si + i) % kGraphPoints;
+            const bool hasData = !atEnd && (graphLufs[idx] > -99.0f);
+            const GateState cur = hasData ? graphGate[idx] : GateState::Active;
+
+            if (!hasData || atEnd)
+            {
+                if (blockStart >= 0) { drawBlock(blockStart, i, blockState); blockStart = -1; }
+            }
+            else if (blockStart < 0)
+            {
+                blockStart = i;  blockState = cur;
+            }
+            else if (cur != blockState)
+            {
+                drawBlock(blockStart, i, blockState);
+                blockStart = i;  blockState = cur;
+            }
+        }
+    }
+
+    // ── LUFS horizontal grid (left-axis labels) ────────────────────────────────
     g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
+    for (float lufs = -10.0f; lufs >= kBotLufs; lufs -= 10.0f)
+    {
+        const int gy = juce::roundToInt(lufsToY(lufs));
+        g.setColour(kGridLine);
+        g.drawHorizontalLine(gy, (float)x0, (float)(x0 + W));
+        g.setColour(kTextLo);
+        g.drawText(juce::String(juce::roundToInt(lufs)),
+                   x0 + 3, gy - 6, 26, 12, juce::Justification::left, false);
+    }
+
+    // ── Gain zero line + right-axis tick labels (no extra full-width lines) ────
+    g.setColour(juce::Colour(0xffc0bcd0));  // light blue-gray, visible but unobtrusive
+    g.drawHorizontalLine(juce::roundToInt(gcy), (float)x0, (float)(x0 + W));
+    g.setColour(kAccent.withAlpha(0.55f));
+    g.drawText("0", x0 + W - 28, juce::roundToInt(gcy) - 6, 24, 12,
+               juce::Justification::right, false);
+
+    const float tickDb = rangeDb <= 15.0f ? 3.0f : rangeDb <= 30.0f ? 6.0f : 12.0f;
     for (float db = tickDb; db < rangeDb; db += tickDb)
     {
         for (float sign : { 1.0f, -1.0f })
         {
-            const float gy = cy - sign * db * scale;
-            g.setColour(kGridLine);
-            g.drawHorizontalLine(juce::roundToInt(gy), static_cast<float>(x0), static_cast<float>(x0 + W));
-            g.setColour(kTextLo);
+            const int gy = juce::roundToInt(gainToY(sign * db));
+            if (gy <= y0 || gy >= y0 + H) continue;
+            g.setColour(kAccent.withAlpha(0.35f));
+            g.drawHorizontalLine(gy, (float)(x0 + W - 10), (float)(x0 + W));
             const int dbInt = juce::roundToInt(sign * db);
+            g.setColour(kAccent.withAlpha(0.55f));
             g.drawText((dbInt > 0 ? "+" : "") + juce::String(dbInt),
-                       x0 + 3, juce::roundToInt(gy) - 6, 26, 12,
-                       juce::Justification::left, false);
+                       x0 + W - 30, gy - 6, 20, 12, juce::Justification::right, false);
         }
     }
-    // Zero line
-    g.setColour(juce::Colour(0xff383860));
-    g.drawHorizontalLine(juce::roundToInt(cy), static_cast<float>(x0), static_cast<float>(x0 + W));
-    g.setColour(kTextLo);
-    g.drawText("0", x0 + 3, juce::roundToInt(cy) - 6, 26, 12,
-               juce::Justification::left, false);
 
-    const int numPts = graphFull ? kGraphPoints : graphHead;
-    if (numPts < 2) return;
-
-    const int startIdx = graphFull ? graphHead : 0;
-    juce::Path path;
-    bool started = false;
-    for (int i = 0; i < numPts; ++i)
+    // ── Gate threshold line (orange, left-axis reference) ─────────────────────
     {
-        const int idx = (startIdx + i) % kGraphPoints;
-        const float px = x0 + static_cast<float>(i) * W / kGraphPoints;
-        const float py = cy - graphGain[idx] * scale;
-        if (!started) { path.startNewSubPath(px, py); started = true; }
-        else          { path.lineTo(px, py); }
+        const int gy = juce::roundToInt(lufsToY(gateThreshDb));
+        g.setColour(kCut);
+        g.drawHorizontalLine(gy, (float)x0, (float)(x0 + W));
+        g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
+        g.drawText("GATE THR", x0 + 3, gy + 2, 54, 10, juce::Justification::left, false);
     }
-    g.setColour(kAccent);
-    g.strokePath(path, juce::PathStrokeType(1.5f));
+
+    // ── Target LUFS line (muted violet, distinct from gain waveform) ─────────────
+    {
+        const int ty = juce::roundToInt(lufsToY(targetLufs));
+        g.setColour(kTarget);
+        g.drawHorizontalLine(ty, (float)x0, (float)(x0 + W));
+        g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
+        g.drawText("TARGET", x0 + 3, ty - 11, 42, 10, juce::Justification::left, false);
+    }
+
+    // ── LUFS waveform (three segments: green=Active, orange=InHold, dim=Frozen) ─
+    if (numPts >= 2)
+    {
+        juce::Path pathActive, pathHold, pathFrozen;
+        bool sActive = false, sHold = false, sFrozen = false;
+        for (int i = 0; i < numPts; ++i)
+        {
+            const int   idx  = (si + i) % kGraphPoints;
+            const float lufs = graphLufs[idx];
+            if (lufs <= -99.0f) { sActive = sHold = sFrozen = false; continue; }
+            const float px = x0 + (float)i * W / kGraphPoints;
+            const float py = lufsToY(lufs);
+            const GateState gs = graphGate[idx];
+
+            // Reset sub-paths that are no longer the current state
+            if (gs != GateState::Active)  sActive  = false;
+            if (gs != GateState::InHold)  sHold    = false;
+            if (gs != GateState::Frozen)  sFrozen  = false;
+
+            juce::Path& path    = gs == GateState::Active ? pathActive
+                                : gs == GateState::InHold ? pathHold : pathFrozen;
+            bool&       started = gs == GateState::Active ? sActive
+                                : gs == GateState::InHold ? sHold   : sFrozen;
+
+            if (!started) { path.startNewSubPath(px, py); started = true; }
+            else            path.lineTo(px, py);
+        }
+        g.setColour(kWaveform);
+        g.strokePath(pathActive, juce::PathStrokeType(1.5f));
+        g.setColour(kCut);
+        g.strokePath(pathHold,   juce::PathStrokeType(1.5f));
+        g.setColour(kTextLo);
+        g.strokePath(pathFrozen, juce::PathStrokeType(1.0f));
+    }
+
+    // ── Gain waveform (cyan, right-axis scale) ────────────────────────────────
+    if (numPts >= 2)
+    {
+        juce::Path gainPath;
+        bool started = false;
+        for (int i = 0; i < numPts; ++i)
+        {
+            const int   idx = (si + i) % kGraphPoints;
+            const float px  = x0 + (float)i * W / kGraphPoints;
+            const float py  = gainToY(graphGain[idx]);
+            if (!started) { gainPath.startNewSubPath(px, py); started = true; }
+            else            gainPath.lineTo(px, py);
+        }
+        g.setColour(kAccent);
+        g.strokePath(gainPath, juce::PathStrokeType(1.5f));
+    }
+
+    // ── Gate transition markers (vertical time indicators) ────────────────────
+    // Full-height semi-transparent line at each state change, coloured by new state:
+    //   → InHold : orange  (signal just dropped below threshold)
+    //   → Frozen : green   (hold window elapsed, gate has fired)
+    //   → Active : dim     (gate released, leveler re-engaged)
+    if (numPts >= 2)
+    {
+        GateState prev = graphGate[si % kGraphPoints];
+        for (int i = 1; i < numPts; ++i)
+        {
+            const int idx = (si + i) % kGraphPoints;
+            if (graphLufs[idx] <= -99.0f) { prev = GateState::Active; continue; }
+            const GateState cur = graphGate[idx];
+            if (cur != prev)
+            {
+                const float px = x0 + (float)i * W / kGraphPoints;
+                const juce::Colour mc = cur == GateState::InHold  ? kCut
+                                      : cur == GateState::Frozen   ? kWaveform
+                                      : kTextLo;
+                g.setColour(mc.withAlpha(0.35f));
+                g.drawVerticalLine(juce::roundToInt(px), (float)y0, (float)(y0 + H));
+                prev = cur;
+            }
+        }
+    }
+
+    // ── Panel labels ──────────────────────────────────────────────────────────
+    g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
+    g.setColour(kWaveform.withAlpha(0.8f));
+    g.drawText("INPUT LUFS", x0 + 3, y0 + 2, 64, 10, juce::Justification::left, false);
+    g.setColour(kAccent.withAlpha(0.8f));
+    g.drawText("GAIN dB", x0 + W - 46, y0 + 2, 42, 10, juce::Justification::right, false);
 
     g.setColour(kGridLine);
     g.drawRect(area);
@@ -454,7 +630,7 @@ void DialogueLevelerAudioProcessorEditor::paintGraph(juce::Graphics& g,
 //==============================================================================
 void DialogueLevelerAudioProcessorEditor::timerCallback()
 {
-    // Drain FIFO → graph ring buffer
+    // Drain FIFO → gain + LUFS ring buffers (same head so they stay in lock-step)
     {
         const int available = proc.gainFifo.getNumReady();
         int s1, n1, s2, n2;
@@ -464,6 +640,8 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
             for (int i = 0; i < count; ++i)
             {
                 graphGain[graphHead] = proc.gainFifoBuffer[start + i].gainDb;
+                graphLufs[graphHead] = proc.gainFifoBuffer[start + i].lufsIn;
+                graphGate[graphHead] = proc.gainFifoBuffer[start + i].gate;
                 graphHead = (graphHead + 1) % kGraphPoints;
                 if (graphHead == 0) graphFull = true;
             }
