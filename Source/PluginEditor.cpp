@@ -581,7 +581,10 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
         bool started = false;
         for (int i = 0; i < numPts; ++i)
         {
-            const int   idx = (si + i) % kGraphPoints;
+            const int   idx  = (si + i) % kGraphPoints;
+            // Skip slots that the LUFS path treats as uninitialised (no-signal sentinel).
+            // Without this, zero-initialised gain slots draw a spurious line to 0 dB.
+            if (graphLufs[idx] <= -99.0f) { started = false; continue; }
             const float px  = x0 + (float)i * W / kGraphPoints;
             const float py  = gainToY(graphGain[idx]);
             if (!started) { gainPath.startNewSubPath(px, py); started = true; }
