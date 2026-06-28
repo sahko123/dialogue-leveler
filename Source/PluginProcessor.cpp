@@ -364,7 +364,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     {
         // 1. Apply pre-gain in-place, then average to mono for detection
         const float pgLinear = preGainSmoothed.getNextValue();
-        for (int ch = 0; ch < numChannels; ++ch)
+        for (int ch = 0; ch < numInputChannels; ++ch)
             buffer.getWritePointer(ch)[s] *= pgLinear;
 
         float mono = 0.0f;
