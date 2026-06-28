@@ -418,13 +418,17 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         }
 
         // 3c. Peak limiter override — caps desired gain so output stays below peakLimitThresh.
+        //     Output Trim is factored out of the cap so the threshold is an absolute ceiling
+        //     on the final output (not just on the leveler gain before trim is applied).
         //     Takes the tighter of the running per-sample cap and the block pre-scan cap so
         //     the gain starts dropping from sample 0 of any block containing a peak.
         //     Active even during gate-freeze so transients can't sneak through silence.
+        const float trimDb          = juce::Decibels::gainToDecibels(
+                                          outputTrimGain.getCurrentValue());
         const float peakEnvDb       = peakEnv_ > 1e-7f
             ? juce::Decibels::gainToDecibels(peakEnv_) : -100.0f;
-        const float peakCap         = peakLimitThresh - peakEnvDb;
-        const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap);
+        const float peakCap         = peakLimitThresh - trimDb - peakEnvDb;
+        const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap - trimDb);
         const bool  limiterDriving  = (effectivePeakCap < desiredGainDb);
         if (limiterDriving) desiredGainDb = effectivePeakCap;
 
