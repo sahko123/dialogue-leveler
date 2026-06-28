@@ -368,6 +368,11 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const float invInputChannels = 1.0f / static_cast<float>(numInputChannels);
     const int gateHoldSamples = juce::roundToInt(gateHoldMs * currentSampleRate / 1000.0f);
 
+    // Capture gate state at block entry so the FIFO frame represents the state the
+    // block started in rather than the state it ended in (avoids one-block display lag).
+    const float  entryMeasuredDb  = detector.getLoudnessDb();
+    const int    entryHoldRemain  = gateHoldSamplesRemaining;
+
     // ── Per-sample DSP loop ──────────────────────────────────────────────────
     float lastMeasuredDb = -100.0f;
     for (int s = 0; s < numSamples; ++s)
@@ -539,9 +544,9 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         int s1, n1, s2, n2;
         gainFifo.prepareToWrite(1, s1, n1, s2, n2);
         GateState gs;
-        if (lastMeasuredDb >= gateThreshDb)   gs = GateState::Active;
-        else if (gateHoldSamplesRemaining > 0) gs = GateState::InHold;
-        else                                   gs = GateState::Frozen;
+        if (entryMeasuredDb >= gateThreshDb) gs = GateState::Active;
+        else if (entryHoldRemain > 0)        gs = GateState::InHold;
+        else                                 gs = GateState::Frozen;
         if (n1 > 0) gainFifoBuffer[s1] = { smoothedGainDb, lastMeasuredDb, gs };
         gainFifo.finishedWrite(n1 + n2);
     }
