@@ -186,9 +186,9 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
     presetBox.setTextWhenNothingSelected("-- Preset --");
     presetBox.setTooltip("Select a saved preset to load it");
     presetBox.onChange = [this] {
-        const int id = presetBox.getSelectedId();
-        if (id <= 0) return;
-        const juce::File f = getPresetsDir().getChildFile(presetBox.getItemText(id - 1) + ".xml");
+        const juce::String name = presetBox.getSelectedItemText();
+        if (name.isEmpty()) return;
+        const juce::File f = getPresetsDir().getChildFile(name + ".xml");
         if (f.existsAsFile())
             if (auto xml = juce::XmlDocument::parse(f))
                 if (xml->hasTagName(proc.apvts.state.getType()))
@@ -757,9 +757,8 @@ void DialogueLevelerAudioProcessorEditor::savePreset()
 
 void DialogueLevelerAudioProcessorEditor::deletePreset()
 {
-    const int id = presetBox.getSelectedId();
-    if (id <= 0) return;
-    const juce::String name = presetBox.getItemText(id - 1);
+    const juce::String name = presetBox.getSelectedItemText();
+    if (name.isEmpty()) return;
     getPresetsDir().getChildFile(name + ".xml").deleteFile();
     refreshPresetList();
 }
