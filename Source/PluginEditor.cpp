@@ -729,22 +729,24 @@ void DialogueLevelerAudioProcessorEditor::savePreset()
     w->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
 
     juce::Component::SafePointer<juce::AlertWindow> safeW(w);
+    juce::Component::SafePointer<DialogueLevelerAudioProcessorEditor> safeThis(this);
     w->enterModalState(true,
-        juce::ModalCallbackFunction::create([this, safeW](int result) mutable
+        juce::ModalCallbackFunction::create([safeThis, safeW](int result) mutable
         {
+            if (safeThis == nullptr) return;
             if (result == 1 && safeW != nullptr)
             {
                 const juce::String name = safeW->getTextEditorContents("name").trim();
                 if (!name.isEmpty())
                 {
-                    const juce::File dir = getPresetsDir();
+                    const juce::File dir = safeThis->getPresetsDir();
                     dir.createDirectory();
-                    if (auto xml = proc.apvts.copyState().createXml())
+                    if (auto xml = safeThis->proc.apvts.copyState().createXml())
                         xml->writeTo(dir.getChildFile(name + ".xml"));
-                    refreshPresetList();
-                    for (int i = 1; i <= presetBox.getNumItems(); ++i)
-                        if (presetBox.getItemText(i - 1) == name)
-                            { presetBox.setSelectedId(i, juce::dontSendNotification); break; }
+                    safeThis->refreshPresetList();
+                    for (int i = 1; i <= safeThis->presetBox.getNumItems(); ++i)
+                        if (safeThis->presetBox.getItemText(i - 1) == name)
+                            { safeThis->presetBox.setSelectedId(i, juce::dontSendNotification); break; }
                 }
             }
         }), true);
