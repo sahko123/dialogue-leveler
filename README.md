@@ -2,13 +2,9 @@
 
 A vocal-rider style loudness leveler for speech and dialogue post-production, built with JUCE. Targets Adobe Premiere Pro on Windows (VST3).
 
+[![Download Latest](https://img.shields.io/github/v/release/sahko123/dialogue-leveler?label=Download%20Latest&style=for-the-badge&logo=windows&color=4a6282)](https://github.com/sahko123/dialogue-leveler/releases/latest)
+
 ![Dialogue Leveler plugin UI](docs/screenshot1.png)
-
----
-
-## Download
-
-Pre-built Windows installer available on the [Releases](../../releases/latest) page — no build tools required.
 
 ---
 
