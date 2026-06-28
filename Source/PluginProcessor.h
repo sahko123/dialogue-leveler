@@ -104,7 +104,8 @@ private:
     int tpWindowFilled   = 0;
 
     // DSP state — audio thread only
-    LoudnessDetector detector;
+    LoudnessDetector detector;   // left / mono channel K-weighting
+    LoudnessDetector detectorR;  // right channel K-weighting (stereo BS.1770-4)
     juce::SmoothedValue<float> outputTrimGain; // smoothed to prevent Output Trim zipper noise
     juce::SmoothedValue<float> preGainSmoothed; // smoothed to prevent Pre-Gain zipper noise
     double currentSampleRate      = 44100.0;

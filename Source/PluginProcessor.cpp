@@ -155,13 +155,15 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
 {
     currentSampleRate = sampleRate;
 
-    // Allocate detector ring buffer for worst-case window (1000 ms)
+    // Allocate detector ring buffers for worst-case window (1000 ms)
     detector.prepare(sampleRate, 1000.0f);
+    detectorR.prepare(sampleRate, 1000.0f);
 
     // Set initial window from parameter
     const float windowMs = pDetectionWindow->load(std::memory_order_relaxed);
     currentWindowSamples = juce::jmax(1, juce::roundToInt(windowMs * sampleRate / 1000.0));
     detector.setWindowSamples(currentWindowSamples);
+    detectorR.setWindowSamples(currentWindowSamples);
 
     // Hold gain at starting gain until the detector window fills from actual audio
     const float startGainDb = pStartingGain->load(std::memory_order_relaxed);
@@ -224,6 +226,7 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
 void DialogueLevelerAudioProcessor::releaseResources()
 {
     detector.reset();
+    detectorR.reset();
     if (truePeakOversampler)
         truePeakOversampler->reset();
 }
@@ -240,13 +243,15 @@ bool DialogueLevelerAudioProcessor::isBusesLayoutSupported(const BusesLayout& la
 //==============================================================================
 // Helper shared by processBlock and processBlockBypassed: resets all DSP state
 // and restarts the priming countdown so the detector refills cleanly.
-static void resetDSPState(LoudnessDetector& det, float& smoothedGain,
+static void resetDSPState(LoudnessDetector& det, LoudnessDetector& detR,
+                          float& smoothedGain,
                           int& primingCounter, int windowSamples,
                           int& gateHoldRemaining,
                           juce::AudioBuffer<float>& delayBuf, int& delayWritePos,
                           float startingGainDb, float& peakEnv)
 {
     det.reset();
+    detR.reset();
     smoothedGain      = startingGainDb;
     primingCounter    = windowSamples;
     gateHoldRemaining = 0;
@@ -276,9 +281,9 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     // Apply a reset requested by setStateInformation (message-thread → audio-thread)
     const float startGainDb = pStartingGain->load(std::memory_order_relaxed);
     if (resetNeeded.exchange(false, std::memory_order_acq_rel))
-        resetDSPState(detector, smoothedGainDb, primingSamplesRemaining, currentWindowSamples,
-                      gateHoldSamplesRemaining, lookaheadBuffer, lookaheadWritePos, startGainDb,
-                      peakEnv_);
+        resetDSPState(detector, detectorR, smoothedGainDb, primingSamplesRemaining,
+                      currentWindowSamples, gateHoldSamplesRemaining,
+                      lookaheadBuffer, lookaheadWritePos, startGainDb, peakEnv_);
 
     // Handle peak/avg reset requests from GUI
     if (resetPeakNeeded.exchange(false, std::memory_order_acq_rel))
@@ -317,6 +322,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     if (newWindowSamples != currentWindowSamples)
     {
         detector.setWindowSamples(newWindowSamples);
+        detectorR.setWindowSamples(newWindowSamples);
         currentWindowSamples = newWindowSamples;
     }
 
@@ -367,13 +373,22 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         for (int ch = 0; ch < numInputChannels; ++ch)
             buffer.getWritePointer(ch)[s] *= pgLinear;
 
-        float mono = 0.0f;
-        for (int ch = 0; ch < numInputChannels; ++ch)
-            mono += buffer.getReadPointer(ch)[s];
-        mono *= invInputChannels;
-
-        detector.processSample(mono);
-        const float measuredDb = detector.getLoudnessDb();
+        // BS.1770-4: K-weight each channel independently, square each, then average.
+        // For mono, detectorR is unused and we fall back to the single-detector path.
+        float measuredDb;
+        if (numInputChannels >= 2)
+        {
+            detector.processSample(buffer.getReadPointer(0)[s]);
+            detectorR.processSample(buffer.getReadPointer(1)[s]);
+            const double ms = (detector.getMeanSquare() + detectorR.getMeanSquare()) * 0.5;
+            measuredDb = ms < 1e-10 ? -100.0f
+                                    : static_cast<float>(-0.691 + 10.0 * std::log10(ms));
+        }
+        else
+        {
+            detector.processSample(buffer.getReadPointer(0)[s]);
+            measuredDb = detector.getLoudnessDb();
+        }
         lastMeasuredDb = measuredDb;
 
         // 2. Gate: if signal is below threshold past the hold period, freeze gain
@@ -545,9 +560,9 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
     // Honor state-reload resets during bypass so un-bypass starts clean
     const float startGainDbB = pStartingGain->load(std::memory_order_relaxed);
     if (resetNeeded.exchange(false, std::memory_order_acq_rel))
-        resetDSPState(detector, smoothedGainDb, primingSamplesRemaining, currentWindowSamples,
-                      gateHoldSamplesRemaining, lookaheadBuffer, lookaheadWritePos, startGainDbB,
-                      peakEnv_);
+        resetDSPState(detector, detectorR, smoothedGainDb, primingSamplesRemaining,
+                      currentWindowSamples, gateHoldSamplesRemaining,
+                      lookaheadBuffer, lookaheadWritePos, startGainDbB, peakEnv_);
     if (resetPeakNeeded.exchange(false, std::memory_order_acq_rel))
         peakOutputDb.store(-144.0f, std::memory_order_relaxed);
     if (resetAvgNeeded.exchange(false, std::memory_order_acq_rel))
@@ -557,14 +572,17 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
         avgGainDb.store(-999.0f, std::memory_order_relaxed);
     }
 
-    const float invCh = 1.0f / static_cast<float>(numInputChannels);
-
     for (int s = 0; s < numSamples; ++s)
     {
-        float mono = 0.0f;
-        for (int ch = 0; ch < numInputChannels; ++ch)
-            mono += buffer.getReadPointer(ch)[s];
-        detector.processSample(mono * invCh);
+        if (numInputChannels >= 2)
+        {
+            detector.processSample(buffer.getReadPointer(0)[s]);
+            detectorR.processSample(buffer.getReadPointer(1)[s]);
+        }
+        else
+        {
+            detector.processSample(buffer.getReadPointer(0)[s]);
+        }
 
         if (primingSamplesRemaining > 0)
             --primingSamplesRemaining;
@@ -582,7 +600,17 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
         }
     }
 
-    const float bypassMeasuredDb = detector.getLoudnessDb();
+    float bypassMeasuredDb;
+    if (numInputChannels >= 2)
+    {
+        const double ms = (detector.getMeanSquare() + detectorR.getMeanSquare()) * 0.5;
+        bypassMeasuredDb = ms < 1e-10 ? -100.0f
+                                      : static_cast<float>(-0.691 + 10.0 * std::log10(ms));
+    }
+    else
+    {
+        bypassMeasuredDb = detector.getLoudnessDb();
+    }
     currentAppliedGainDb.store(0.0f,            std::memory_order_relaxed);
     currentMeasuredLufs .store(bypassMeasuredDb, std::memory_order_relaxed);
 

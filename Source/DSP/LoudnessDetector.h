@@ -81,10 +81,17 @@ public:
         }
     }
 
+    // Returns the raw K-weighted mean-square energy (linear, not in dB).
+    double getMeanSquare() const noexcept
+    {
+        const double ms = runningSum / static_cast<double>(windowSamples);
+        return ms < 0.0 ? 0.0 : ms;
+    }
+
     // Returns K-weighted mean-square energy in LUFS. Returns -100 when silent.
     float getLoudnessDb() const noexcept
     {
-        const double meanSquare = runningSum / static_cast<double>(windowSamples);
+        const double meanSquare = getMeanSquare();
         if (meanSquare < 1e-10) return -100.0f;
         return static_cast<float>(-0.691 + 10.0 * std::log10(meanSquare));
     }
