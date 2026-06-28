@@ -44,6 +44,12 @@ jobs:
           $v = '${{ github.ref_name }}' -replace '^v', ''
           "VERSION=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Verify VST3 artifact
+        shell: pwsh
+        run: |
+          $dll = "build\DialogueLeveler_artefacts\Release\VST3\DialogueLeveler.vst3\Contents\x86_64-win\DialogueLeveler.vst3"
+          if (-not (Test-Path $dll)) { Write-Error "VST3 artifact not found: $dll"; exit 1 }
+
       - name: Build installer
         shell: pwsh
         run: |
