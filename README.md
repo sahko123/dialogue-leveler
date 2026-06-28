@@ -2,6 +2,16 @@
 
 A vocal-rider style loudness leveler for speech and dialogue post-production, built with JUCE. Targets Adobe Premiere Pro on Windows (VST3).
 
+![Dialogue Leveler plugin UI](docs/screenshot1.png)
+
+---
+
+## Download
+
+Pre-built Windows installer available on the [Releases](../../releases/latest) page — no build tools required.
+
+---
+
 ## Features
 
 - **K-weighted loudness detection** (ITU-R BS.1770-4) with a user-configurable sliding window
