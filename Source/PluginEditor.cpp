@@ -660,7 +660,9 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     // Update meter labels
     const float inLufs  = proc.getMeasuredLufs();
     const float gainDb  = proc.getAppliedGainDb();
-    const float outLufs = inLufs + gainDb;
+    // Adding gain dB to LUFS is only a valid approximation when gain is constant
+    // over the full integration window. Hide the output when there is no signal.
+    const float outLufs = (inLufs > -99.0f) ? inLufs + gainDb : -100.0f;
 
     auto lufsStr = [](float v) -> juce::String
     { return v <= -99.0f ? "-inf" : juce::String(v, 1) + " LUFS"; };
