@@ -127,6 +127,7 @@ DialogueLevelerAudioProcessor::DialogueLevelerAudioProcessor()
     jassert(pPreGain         != nullptr);
     jassert(pStartingGain    != nullptr);
     jassert(pPeakLimit       != nullptr);
+    jassert(apvts.getParameter("bypass") != nullptr);
 }
 
 DialogueLevelerAudioProcessor::~DialogueLevelerAudioProcessor() {}
@@ -376,8 +377,9 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const int    entryHoldRemain  = gateHoldSamplesRemaining;
 
     // ── Per-sample DSP loop ──────────────────────────────────────────────────
-    float lastMeasuredDb  = -100.0f;
+    float lastMeasuredDb     = -100.0f;
     bool  lastLimiterDriving = false;
+    bool  lastGateFrozen     = false;
     for (int s = 0; s < numSamples; ++s)
     {
         // 1. Apply pre-gain in-place, then average to mono for detection
@@ -419,12 +421,21 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         }
 
         // 3a. Peak envelope follower — instantaneous attack, 100ms release.
-        //     Tracks per-channel max (not mono average) so a loud hard-panned transient
-        //     is seen at full amplitude rather than halved by the L+R mix.
-        //     Instantaneous attack catches impulses that are only 1–2 samples wide.
+        //     When lookahead is active, tracks the delayed output (what is about to be
+        //     emitted) so the limiter correctly limits the actual output rather than
+        //     a future sample whose envelope may have decayed by the time it is emitted.
+        //     When lookahead is 0, tracks the live pre-gained input directly.
+        const int readPos = (currentLookaheadSamples > 0)
+            ? (lookaheadWritePos + maxDelaySamples - currentLookaheadSamples) % maxDelaySamples
+            : -1;
         float chanPeak = 0.0f;
         for (int ch = 0; ch < numInputChannels; ++ch)
-            chanPeak = std::max(chanPeak, std::abs(buffer.getReadPointer(ch)[s]));
+        {
+            const float ps = (readPos >= 0)
+                ? std::abs(lookaheadBuffer.getSample(ch, readPos))
+                : std::abs(buffer.getReadPointer(ch)[s]);
+            chanPeak = std::max(chanPeak, ps);
+        }
         if (chanPeak > peakEnv_)
             peakEnv_ = chanPeak;
         else
@@ -458,6 +469,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap - trimDb);
         const bool  limiterDriving  = (effectivePeakCap < desiredGainDb);
         lastLimiterDriving = limiterDriving;
+        lastGateFrozen     = gateFrozen;
         if (limiterDriving) desiredGainDb = effectivePeakCap;
 
         // 4. One-pole smooth. When the peak limiter is actively clamping, use its
@@ -482,8 +494,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
 
         if (currentLookaheadSamples > 0)
         {
-            const int readPos = (lookaheadWritePos + maxDelaySamples - currentLookaheadSamples)
-                                % maxDelaySamples;
+            // readPos was computed above for the peak envelope follower; reuse it here.
             for (int ch = 0; ch < numInputChannels; ++ch)
             {
                 const float delayed = lookaheadBuffer.getSample(ch, readPos);
@@ -504,7 +515,8 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     currentAppliedGainDb.store(smoothedGainDb,  std::memory_order_relaxed);
     currentMeasuredLufs .store(lastMeasuredDb,  std::memory_order_relaxed);
     clippingBoost.store(smoothedGainDb >= maxBoostDb - 0.05f, std::memory_order_relaxed);
-    clippingAtten.store(!lastLimiterDriving && smoothedGainDb <= -maxAttDb + 0.05f,
+    clippingAtten.store(!lastLimiterDriving && !lastGateFrozen
+                        && smoothedGainDb <= -maxAttDb + 0.05f,
                         std::memory_order_relaxed);
 
     // True Peak: 4× oversample the output block, update all-time hold and 3s rolling window
