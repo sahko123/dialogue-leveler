@@ -27,6 +27,15 @@ jobs:
           path: build/_deps
           key: juce-8.0.14-${{ runner.os }}
 
+      - name: Validate JUCE cache
+        shell: pwsh
+        run: |
+          $juceDir = "build/_deps/juce-src"
+          if ((Test-Path $juceDir) -and -not (Test-Path "$juceDir/CMakeLists.txt")) {
+            Write-Warning "JUCE cache appears partial — removing to force a clean download"
+            Remove-Item -Recurse -Force "build/_deps"
+          }
+
       - name: Configure CMake
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
