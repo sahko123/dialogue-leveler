@@ -480,7 +480,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         {
             const int readPos = (lookaheadWritePos + maxDelaySamples - currentLookaheadSamples)
                                 % maxDelaySamples;
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < numInputChannels; ++ch)
             {
                 const float delayed = lookaheadBuffer.getSample(ch, readPos);
                 lookaheadBuffer.setSample(ch, lookaheadWritePos, buffer.getSample(ch, s));
@@ -490,7 +490,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         }
         else
         {
-            for (int ch = 0; ch < numChannels; ++ch)
+            for (int ch = 0; ch < numInputChannels; ++ch)
                 buffer.getWritePointer(ch)[s] *= linearGain;
         }
 
