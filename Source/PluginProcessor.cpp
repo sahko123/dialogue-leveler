@@ -480,7 +480,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         const float peakEnvDb       = peakEnv_ > 1e-7f
             ? juce::Decibels::gainToDecibels(peakEnv_) : -100.0f;
         const float peakCap         = peakLimitThresh - trimDb - peakEnvDb;
-        const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap - trimDb);
+        const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap);
         const bool  limiterDriving  = (effectivePeakCap < desiredGainDb);
         lastLimiterDriving = limiterDriving;
         lastGateFrozen     = gateFrozen;
