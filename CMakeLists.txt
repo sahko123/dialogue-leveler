@@ -4,6 +4,12 @@ project(DialogueLeveler VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Static CRT linkage — eliminates any VCRT DLL dependency from the distributed VST3.
+# Must be set before juce_add_plugin so all targets inherit it.
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # --------------------------------------------------------------------------
 # Fetch JUCE — no manual SDK install required
 # --------------------------------------------------------------------------
