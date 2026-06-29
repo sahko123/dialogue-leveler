@@ -688,7 +688,7 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
 
     // Peak output hold
     auto peakStr = [](float v) -> juce::String
-    { return v <= -143.0f ? "---" : juce::String(v, 1) + " dBTP"; };
+    { return v <= -150.0f ? "---" : juce::String(v, 1) + " dBTP"; };
     auto peakColour = [](float v) -> juce::Colour
     { return v >= -1.0f ? kClipOn : v >= -6.0f ? kCut : kTextHi; };
 

@@ -58,8 +58,8 @@ public:
     // recentPeakDb:  3-second rolling window maximum (no reset button needed).
     // avgGainDb:     Welford online mean since last reset (excludes priming samples).
     //                Sentinel -999.f means "no data yet" (show "---" in GUI).
-    std::atomic<float> peakOutputDb  { -144.0f };
-    std::atomic<float> recentPeakDb  { -144.0f };
+    std::atomic<float> peakOutputDb  { -200.0f };
+    std::atomic<float> recentPeakDb  { -200.0f };
     std::atomic<float> avgGainDb     { -999.0f };
     std::atomic<bool>  resetPeakNeeded { false };
     std::atomic<bool>  resetAvgNeeded  { false };

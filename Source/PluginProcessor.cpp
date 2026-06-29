@@ -173,8 +173,8 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
     peakEnv_ = 0.0f;
 
     // Reset peak/avg stats on each prepare (new playback session)
-    peakOutputDb .store(-144.0f, std::memory_order_relaxed);
-    recentPeakDb .store(-144.0f, std::memory_order_relaxed);
+    peakOutputDb .store(-200.0f, std::memory_order_relaxed);
+    recentPeakDb .store(-200.0f, std::memory_order_relaxed);
     avgGainDb    .store(-999.0f, std::memory_order_relaxed);
     avgGainCount_ = 0;
     avgGainMean_  = 0.0;
@@ -182,7 +182,7 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
     // 3-second rolling True Peak window — one slot per audio block
     const int tpSlots = juce::jmax(32,
         static_cast<int>(std::ceil(3.0 * sampleRate / juce::jmax(1, samplesPerBlock))) + 8);
-    tpWindow.assign(static_cast<size_t>(tpSlots), -144.0f);
+    tpWindow.assign(static_cast<size_t>(tpSlots), -200.0f);
     tpWindowHead     = 0;
     tpWindowCapacity = tpSlots;
     tpWindowFilled   = 0;
@@ -294,9 +294,9 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     // Handle peak/avg reset requests from GUI
     if (resetPeakNeeded.exchange(false, std::memory_order_acq_rel))
     {
-        peakOutputDb .store(-144.0f, std::memory_order_relaxed);
-        recentPeakDb .store(-144.0f, std::memory_order_relaxed);
-        std::fill(tpWindow.begin(), tpWindow.end(), -144.0f);
+        peakOutputDb .store(-200.0f, std::memory_order_relaxed);
+        recentPeakDb .store(-200.0f, std::memory_order_relaxed);
+        std::fill(tpWindow.begin(), tpWindow.end(), -200.0f);
         tpWindowHead   = 0;
         tpWindowFilled = 0;
         if (truePeakOversampler) truePeakOversampler->reset();
@@ -519,7 +519,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
                 tp = std::max(tp, std::abs(ptr[s]));
         }
 
-        const float frameDb = tp > 0.0f ? juce::Decibels::gainToDecibels(tp) : -144.0f;
+        const float frameDb = tp > 0.0f ? juce::Decibels::gainToDecibels(tp) : -200.0f;
 
         // All-time hold
         if (frameDb > peakOutputDb.load(std::memory_order_relaxed))
@@ -529,7 +529,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         tpWindow[tpWindowHead] = frameDb;
         tpWindowHead = (tpWindowHead + 1) % tpWindowCapacity;
         if (tpWindowFilled < tpWindowCapacity) ++tpWindowFilled;
-        float rollingMax = -144.0f;
+        float rollingMax = -200.0f;
         for (int i = 0; i < tpWindowFilled; ++i)
             rollingMax = std::max(rollingMax, tpWindow[i]);
         recentPeakDb.store(rollingMax, std::memory_order_relaxed);
@@ -583,9 +583,9 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
                       lookaheadBuffer, lookaheadWritePos, startGainDbB, peakEnv_);
     if (resetPeakNeeded.exchange(false, std::memory_order_acq_rel))
     {
-        peakOutputDb.store(-144.0f, std::memory_order_relaxed);
-        recentPeakDb.store(-144.0f, std::memory_order_relaxed);
-        std::fill(tpWindow.begin(), tpWindow.end(), -144.0f);
+        peakOutputDb.store(-200.0f, std::memory_order_relaxed);
+        recentPeakDb.store(-200.0f, std::memory_order_relaxed);
+        std::fill(tpWindow.begin(), tpWindow.end(), -200.0f);
         tpWindowHead   = 0;
         tpWindowFilled = 0;
         if (truePeakOversampler) truePeakOversampler->reset();
