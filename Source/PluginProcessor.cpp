@@ -352,7 +352,8 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     // lookahead (~block_size/sampleRate ms) on top of whatever explicit lookahead is set.
     float blockPeakLinear = 0.0f;
     {
-        const float pgApprox = preGainSmoothed.getTargetValue();
+        const float pgApprox = std::max(preGainSmoothed.getCurrentValue(),
+                                         preGainSmoothed.getTargetValue());
         for (int ch = 0; ch < numInputChannels; ++ch)
         {
             const float* rd = buffer.getReadPointer(ch);
