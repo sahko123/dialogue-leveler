@@ -33,6 +33,7 @@ public:
 
     void setWindowSamples(int samples)
     {
+        jassert(bufferSize > 0 && !buffer.empty()); // prepare() must be called first
         const int clamped = juce::jlimit(1, bufferSize, samples);
         if (clamped == windowSamples) return;
         if (clamped > windowSamples)
