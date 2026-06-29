@@ -402,7 +402,7 @@ void DialogueLevelerAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
 //==============================================================================
 void DialogueLevelerAudioProcessorEditor::paintCombined(
     juce::Graphics& g, juce::Rectangle<int> area,
-    float targetLufs, float gateThreshDb, float rangeDb) const
+    float targetLufs, float gateThreshDb, float rangeDb)
 {
     const int x0 = area.getX(), y0 = area.getY();
     const int W  = area.getWidth(), H = area.getHeight();

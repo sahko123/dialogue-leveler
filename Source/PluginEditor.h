@@ -31,7 +31,7 @@ public:
 private:
     void timerCallback() override;
     void paintCombined(juce::Graphics& g, juce::Rectangle<int> area,
-                       float targetLufs, float gateThreshDb, float rangeDb) const;
+                       float targetLufs, float gateThreshDb, float rangeDb);
 
     DialogueLevelerAudioProcessor& proc;
     DlLookAndFeel laf;
@@ -65,7 +65,7 @@ private:
     bool graphFull = false;
 
     // ── Reused Path objects for paintCombined (avoids per-frame heap allocation) ─
-    mutable juce::Path pathActive, pathHold, pathFrozen, gainPath;
+    juce::Path pathActive, pathHold, pathFrozen, gainPath;
 
     // ── Clip LED state (held for 500 ms after last clip) ─────────────────────
     double lastBoostClipMs = -9999.0;
