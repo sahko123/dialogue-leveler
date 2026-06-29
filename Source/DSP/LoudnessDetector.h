@@ -98,7 +98,7 @@ public:
     float getLoudnessDb() const noexcept
     {
         const double meanSquare = getMeanSquare();
-        if (meanSquare < 1e-10) return -100.0f;
+        if (meanSquare < 1e-10) return -100.0f; // 1e-10 ≈ -100 dBFS
         return static_cast<float>(-0.691 + 10.0 * std::log10(meanSquare));
     }
 

@@ -402,7 +402,7 @@ void DialogueLevelerAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
         g.setColour(lit ? kClipOn.brighter(0.3f) : kGridLine);
         g.drawEllipse(lx, ly, sz, sz, 1.0f);
     };
-    // MAX BOOST is col 6, MAX ATTEN is col 7 in the 12-knob layout
+    // MAX BOOST is col 6, MAX ATTEN is col 7 in the 13-knob layout
     drawLed(6, boostLit);
     drawLed(7, attenLit);
 }
