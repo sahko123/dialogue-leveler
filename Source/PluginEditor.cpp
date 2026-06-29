@@ -754,8 +754,10 @@ void DialogueLevelerAudioProcessorEditor::savePreset()
                 {
                     const juce::File dir = safeThis->getPresetsDir();
                     dir.createDirectory();
+                    const juce::File f = dir.getChildFile(name + ".xml");
+                    if (!f.isAChildOf(dir)) return;
                     if (auto xml = safeThis->proc.apvts.copyState().createXml())
-                        xml->writeTo(dir.getChildFile(name + ".xml"));
+                        xml->writeTo(f);
                     safeThis->refreshPresetList();
                     for (int i = 0; i < safeThis->presetBox.getNumItems(); ++i)
                         if (safeThis->presetBox.getItemText(i) == name)
