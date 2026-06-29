@@ -280,7 +280,6 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const int numSamples = buffer.getNumSamples();
     // Guard against buffer having fewer channels than the bus reports
     const int numInputChannels = juce::jmin(getTotalNumInputChannels(), buffer.getNumChannels());
-    const int numChannels      = buffer.getNumChannels();
 
     if (numSamples == 0 || numInputChannels == 0)
         return;

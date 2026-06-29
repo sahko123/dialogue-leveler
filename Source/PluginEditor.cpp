@@ -541,7 +541,9 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
         g.setColour(kCut);
         g.drawHorizontalLine(gy, (float)x0, (float)(x0 + W));
         g.setFont(juce::Font(juce::FontOptions().withHeight(9.0f)));
-        g.drawText("GATE THR", x0 + 3, gy + 2, 54, 10, juce::Justification::left, false);
+        // Draw label above the line when near the bottom to avoid the gate lane strip
+        const int labelY = (gy + 12 <= laneY) ? gy + 2 : gy - 11;
+        g.drawText("GATE THR", x0 + 3, labelY, 54, 10, juce::Justification::left, false);
     }
 
     // ── Target LUFS line (muted violet, distinct from gain waveform) ─────────────
