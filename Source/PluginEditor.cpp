@@ -679,7 +679,7 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     // Update meter labels
     const float inLufs  = proc.getMeasuredLufs();
     const float gainDb  = proc.getAppliedGainDb();
-    const float trimDb  = proc.pOutputTrim->load(std::memory_order_relaxed);
+    const float trimDb  = proc.apvts.getRawParameterValue("outputTrim")->load(std::memory_order_relaxed);
     // Approximate: valid when gain is constant over the full integration window.
     const float outLufs = (inLufs > -99.0f) ? inLufs + gainDb + trimDb : -100.0f;
 
