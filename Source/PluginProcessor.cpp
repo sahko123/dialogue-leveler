@@ -228,6 +228,9 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
 
 void DialogueLevelerAudioProcessor::releaseResources()
 {
+    // Hosts always call prepareToPlay() before resuming audio after releaseResources(),
+    // so per-sample DSP state (smoothedGainDb, peakEnv_, etc.) is re-initialised there.
+    // Only reset the objects that hold heap-allocated ring buffers.
     detector.reset();
     detectorR.reset();
     if (truePeakOversampler)
