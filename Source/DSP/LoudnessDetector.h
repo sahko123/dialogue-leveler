@@ -35,6 +35,12 @@ public:
     {
         const int clamped = juce::jlimit(1, bufferSize, samples);
         if (clamped == windowSamples) return;
+        if (clamped > windowSamples)
+        {
+            // Zero-fill newly included slots so stale data doesn't inflate the sum
+            for (int i = windowSamples; i < clamped; ++i)
+                buffer[static_cast<size_t>((writePos - 1 - i + bufferSize) % bufferSize)] = 0.0f;
+        }
         windowSamples = clamped;
         recomputeRunningSum();
     }
