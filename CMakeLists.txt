@@ -30,7 +30,7 @@ FetchContent_MakeAvailable(JUCE)
 # Plugin target — VST3 + Standalone only
 # --------------------------------------------------------------------------
 juce_add_plugin(DialogueLeveler
-    VERSION                     1.0.0
+    VERSION                     ${PROJECT_VERSION}
     COMPANY_NAME                "sahko123"
     PLUGIN_MANUFACTURER_CODE    Sahk
     PLUGIN_CODE                 Dlvl
