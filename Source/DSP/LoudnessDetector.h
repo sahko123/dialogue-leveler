@@ -158,8 +158,7 @@ private:
         // least 8× per window so short windows don't accumulate excessive float error.
         driftRecomputeInterval = juce::jmax(1,
             juce::jmin(static_cast<int>(cachedSampleRate),
-                       static_cast<int>(juce::jmin(static_cast<int64_t>(windowSamples) * 8,
-                                                   static_cast<int64_t>(INT_MAX)))));
+                       juce::jmax(1, windowSamples / 8)));
         recomputeCountdown = juce::jmin(recomputeCountdown, driftRecomputeInterval);
     }
 
