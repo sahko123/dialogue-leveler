@@ -783,7 +783,10 @@ void DialogueLevelerAudioProcessorEditor::deletePreset()
         {
             if (result == 1 && safeThis)
             {
-                safeThis->getPresetsDir().getChildFile(name + ".xml").deleteFile();
+                const juce::File dir = safeThis->getPresetsDir();
+                const juce::File f   = dir.getChildFile(name + ".xml");
+                if (!f.isAChildOf(dir)) return;
+                f.deleteFile();
                 safeThis->refreshPresetList();
             }
         }));
