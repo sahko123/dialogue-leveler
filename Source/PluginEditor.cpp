@@ -644,9 +644,8 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
 {
     // Drain FIFO → gain + LUFS ring buffers (same head so they stay in lock-step)
     {
-        const int available = proc.gainFifo.getNumReady();
         int s1, n1, s2, n2;
-        proc.gainFifo.prepareToRead(available, s1, n1, s2, n2);
+        proc.gainFifo.prepareToRead(proc.gainFifo.getNumReady(), s1, n1, s2, n2);
         auto consume = [&](int start, int count)
         {
             for (int i = 0; i < count; ++i)
