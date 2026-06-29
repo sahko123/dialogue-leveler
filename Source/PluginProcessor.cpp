@@ -528,9 +528,11 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     // Expose last-sample values for GUI meters
     currentAppliedGainDb.store(smoothedGainDb,  std::memory_order_relaxed);
     currentMeasuredLufs .store(lastMeasuredDb,  std::memory_order_relaxed);
-    clippingBoost.store(primingSamplesRemaining == 0 && smoothedGainDb >= maxBoostDb - 0.05f,
+    clippingBoost.store(primingSamplesRemaining == 0 && maxBoostDb > 0.0f
+                        && smoothedGainDb >= maxBoostDb - 0.05f,
                         std::memory_order_relaxed);
-    clippingAtten.store(primingSamplesRemaining == 0 && !lastLimiterDriving && !lastGateFrozen
+    clippingAtten.store(primingSamplesRemaining == 0 && maxAttDb > 0.0f
+                        && !lastLimiterDriving && !lastGateFrozen
                         && smoothedGainDb <= -maxAttDb + 0.05f,
                         std::memory_order_relaxed);
 
