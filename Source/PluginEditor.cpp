@@ -192,7 +192,10 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
         if (f.existsAsFile())
             if (auto xml = juce::XmlDocument::parse(f))
                 if (xml->hasTagName(proc.apvts.state.getType()))
+                {
                     proc.apvts.replaceState(juce::ValueTree::fromXml(*xml));
+                    proc.resetNeeded.store(true, std::memory_order_release);
+                }
     };
     addAndMakeVisible(presetBox);
 
