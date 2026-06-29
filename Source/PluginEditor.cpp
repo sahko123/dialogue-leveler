@@ -194,6 +194,14 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
                 {
                     proc.apvts.replaceState(juce::ValueTree::fromXml(*xml));
                     proc.resetNeeded.store(true, std::memory_order_release);
+                    // Drain any pending FIFO frames before resetting the graph so
+                    // stale audio-thread data doesn't overwrite the cleared arrays.
+                    {
+                        int s1, n1, s2, n2;
+                        const int ready = proc.gainFifo.getNumReady();
+                        proc.gainFifo.prepareToRead(ready, s1, n1, s2, n2);
+                        proc.gainFifo.finishedRead(n1 + n2);
+                    }
                     graphHead = 0;
                     graphFull = false;
                     graphGain.fill(-100.0f);
