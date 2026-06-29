@@ -751,9 +751,9 @@ void DialogueLevelerAudioProcessorEditor::savePreset()
                     if (auto xml = safeThis->proc.apvts.copyState().createXml())
                         xml->writeTo(dir.getChildFile(name + ".xml"));
                     safeThis->refreshPresetList();
-                    for (int i = 1; i <= safeThis->presetBox.getNumItems(); ++i)
-                        if (safeThis->presetBox.getItemText(i - 1) == name)
-                            { safeThis->presetBox.setSelectedId(i, juce::dontSendNotification); break; }
+                    for (int i = 0; i < safeThis->presetBox.getNumItems(); ++i)
+                        if (safeThis->presetBox.getItemText(i) == name)
+                            { safeThis->presetBox.setSelectedItemIndex(i, juce::dontSendNotification); break; }
                 }
             }
         }), true);
