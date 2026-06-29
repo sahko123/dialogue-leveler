@@ -26,6 +26,7 @@ public:
             static_cast<int>(std::ceil(sampleRate * maxWindowMs / 1000.0)));
         buffer.assign(static_cast<size_t>(maxSamples), 0.0f);
         bufferSize = maxSamples;
+        windowSamples = juce::jlimit(1, bufferSize, windowSamples);
         driftRecomputeInterval = juce::jmax(1, static_cast<int>(sampleRate));
         computeKWeightingCoeffs(sampleRate);
         reset();
@@ -58,6 +59,7 @@ public:
 
     void processSample(float monoSample) noexcept
     {
+        if (buffer.empty()) return;
         // K-weighting filter cascade
         const double x = static_cast<double>(monoSample);
 
