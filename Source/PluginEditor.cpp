@@ -670,9 +670,9 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     // Update meter labels
     const float inLufs  = proc.getMeasuredLufs();
     const float gainDb  = proc.getAppliedGainDb();
-    // Adding gain dB to LUFS is only a valid approximation when gain is constant
-    // over the full integration window. Hide the output when there is no signal.
-    const float outLufs = (inLufs > -99.0f) ? inLufs + gainDb : -100.0f;
+    const float trimDb  = proc.pOutputTrim->load(std::memory_order_relaxed);
+    // Approximate: valid when gain is constant over the full integration window.
+    const float outLufs = (inLufs > -99.0f) ? inLufs + gainDb + trimDb : -100.0f;
 
     auto lufsStr = [](float v) -> juce::String
     { return v <= -99.0f ? "-inf" : juce::String(v, 1) + " LUFS"; };
@@ -680,17 +680,18 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     { return (v >= 0 ? "+" : "") + juce::String(v, 1) + " dB"; };
 
     mIn  .setText(lufsStr(inLufs),  juce::dontSendNotification);
-    mGain.setText(gainStr(gainDb),  juce::dontSendNotification);
+    mGain.setText(inLufs > -99.0f ? gainStr(gainDb) : "---", juce::dontSendNotification);
     mOut .setText(lufsStr(outLufs), juce::dontSendNotification);
     mGain.setColour(juce::Label::textColourId,
-                    gainDb > 0.5f  ? kAccent :
-                    gainDb < -0.5f ? kCut   : kTextHi);
+                    inLufs <= -99.0f ? kTextHi :
+                    gainDb > 0.5f    ? kAccent :
+                    gainDb < -0.5f   ? kCut   : kTextHi);
 
     // Peak output hold
     auto peakStr = [](float v) -> juce::String
     { return v <= -150.0f ? "---" : juce::String(v, 1) + " dBTP"; };
     auto peakColour = [](float v) -> juce::Colour
-    { return v >= -1.0f ? kClipOn : v >= -6.0f ? kCut : kTextHi; };
+    { return v <= -150.0f ? kTextHi : v >= -1.0f ? kClipOn : v >= -6.0f ? kCut : kTextHi; };
 
     const float peak = proc.peakOutputDb.load(std::memory_order_relaxed);
     peakOutVal.setText(peakStr(peak), juce::dontSendNotification);
@@ -704,10 +705,10 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     // Average gain
     const float avg = proc.avgGainDb.load(std::memory_order_relaxed);
     auto avgStr = [](float v) -> juce::String
-    { return v <= -100.0f ? "---" : (v >= 0.0f ? "+" : "") + juce::String(v, 1) + " dB"; };
+    { return v <= -900.0f ? "---" : (v >= 0.0f ? "+" : "") + juce::String(v, 1) + " dB"; };
     avgGainVal.setText(avgStr(avg), juce::dontSendNotification);
     avgGainVal.setColour(juce::Label::textColourId,
-                         avg <= -100.0f ? kTextHi :
+                         avg <= -900.0f ? kTextHi :
                          avg >   0.5f   ? kAccent  :
                          avg <  -0.5f   ? kCut    : kTextHi);
 
