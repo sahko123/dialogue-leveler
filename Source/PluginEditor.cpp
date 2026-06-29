@@ -12,7 +12,6 @@ static const juce::Colour kAccentDim{ 0xff344862 };  // darker steel blue — se
 static const juce::Colour kTextHi   { 0xff262016 };  // near-black ink
 static const juce::Colour kTextLo   { 0xff847870 };  // warm mid-gray
 static const juce::Colour kGridLine { 0xffd0c8bc };  // light warm grid lines
-static const juce::Colour kBoost    { 0xff4a6282 };  // positive gain (= kAccent)
 static const juce::Colour kCut      { 0xffaa4428 };  // muted rust — gate / negative
 static const juce::Colour kClipOn   { 0xffcc2828 };  // red clip LED
 static const juce::Colour kClipOff  { 0xffddd5c8 };  // dim clip LED
@@ -676,7 +675,7 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     mGain.setText(gainStr(gainDb),  juce::dontSendNotification);
     mOut .setText(lufsStr(outLufs), juce::dontSendNotification);
     mGain.setColour(juce::Label::textColourId,
-                    gainDb > 0.5f  ? kBoost :
+                    gainDb > 0.5f  ? kAccent :
                     gainDb < -0.5f ? kCut   : kTextHi);
 
     // Peak output hold
@@ -701,7 +700,7 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     avgGainVal.setText(avgStr(avg), juce::dontSendNotification);
     avgGainVal.setColour(juce::Label::textColourId,
                          avg <= -100.0f ? kTextHi :
-                         avg >   0.5f   ? kBoost  :
+                         avg >   0.5f   ? kAccent  :
                          avg <  -0.5f   ? kCut    : kTextHi);
 
     repaint();
