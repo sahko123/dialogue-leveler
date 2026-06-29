@@ -779,7 +779,7 @@ void DialogueLevelerAudioProcessorEditor::deletePreset()
         "Delete Preset",
         "Delete \"" + name + "\"? This cannot be undone.",
         "Delete", "Cancel",
-        nullptr,
+        this,
         juce::ModalCallbackFunction::create([safeThis, name](int result)
         {
             if (result == 1 && safeThis)
