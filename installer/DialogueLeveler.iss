@@ -32,7 +32,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 ; VST3 goes to C:\Program Files\Common Files\VST3\ — fixed, no user choice
-DefaultDirName={commonpf64}\VST3
+DefaultDirName={commoncf64}\VST3
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 CreateUninstallRegKey=yes
@@ -70,6 +70,6 @@ Type: filesandordirs; Name: "{app}\DialogueLeveler.vst3"
 
 [Messages]
 WelcomeLabel1=Welcome to the {#AppName} installer
-WelcomeLabel2=This will install {#AppName} {#AppVersion}, a free automatic dialogue leveler VST3 plugin for podcasts, video, and broadcast.%n%nThe plugin will be installed to:%n%n    {commonpf64}\VST3\%n%nAfter installation, open your DAW and scan for new VST3 plugins.
+WelcomeLabel2=This will install {#AppName} {#AppVersion}, a free automatic dialogue leveler VST3 plugin for podcasts, video, and broadcast.%n%nThe plugin will be installed to:%n%n    {commoncf64}\VST3\%n%nAfter installation, open your DAW and scan for new VST3 plugins.
 FinishedHeadingLabel=Installation complete
 FinishedLabel={#AppName} {#AppVersion} has been installed.%n%nOpen your DAW and scan for new VST3 plugins to start using it.%n%nSource code and documentation: {#AppURL}
