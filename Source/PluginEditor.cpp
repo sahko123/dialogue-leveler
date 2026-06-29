@@ -312,15 +312,17 @@ void DialogueLevelerAudioProcessorEditor::paint(juce::Graphics& g)
     const float graphRange   = juce::jmax(maxBoost, maxAtten, 1.0f) * 1.1f;
     paintCombined(g, { 0, kCombY, W, kCombH }, targetLufs, gateThreshDb, graphRange);
 
-    // Meter separator lines
-    constexpr int kMeterY = kCombY + kCombH + 4;  // = 177, unchanged
+    // Meter separator lines — kMeterY must match resized(); static_assert verifies.
+    constexpr int kMeterY = kCombY + kCombH + 4;
+    constexpr int kMeterH = 36;
+    static_assert(kMeterY == 177, "kMeterY in paint() must match resized() layout");
     g.setColour(kGridLine);
     const int col = W / 3;
     g.drawVerticalLine(col,   kMeterY, kMeterY + 34); // 34 = captH(12) + valH(22)
     g.drawVerticalLine(col*2, kMeterY, kMeterY + 34);
 
     // Stats row dividers (three columns)
-    constexpr int kStatsY = kMeterY + 36 + 4;
+    constexpr int kStatsY = kMeterY + kMeterH + 4;
     g.setColour(kGridLine);
     g.drawVerticalLine(W / 3,     kStatsY, kStatsY + 40);
     g.drawVerticalLine(2 * W / 3, kStatsY, kStatsY + 40);
@@ -609,7 +611,14 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
     //   → Active : dim     (gate released, leveler re-engaged)
     if (numPts >= 2)
     {
-        GateState prev = graphGate[si];
+        // Initialise prev from the first valid (non-sentinel) frame to avoid
+        // a spurious transition marker at the very start of the graph.
+        GateState prev = GateState::Active;
+        for (int i = 0; i < numPts; ++i)
+        {
+            if (graphLufs[(si + i) % kGraphPoints] > -99.0f)
+            { prev = graphGate[(si + i) % kGraphPoints]; break; }
+        }
         for (int i = 1; i < numPts; ++i)
         {
             const int idx = (si + i) % kGraphPoints;
@@ -780,7 +789,7 @@ void DialogueLevelerAudioProcessorEditor::deletePreset()
         "Delete Preset",
         "Delete \"" + name + "\"? This cannot be undone.",
         "Delete", "Cancel",
-        this,
+        nullptr,
         juce::ModalCallbackFunction::create([safeThis, name](int result)
         {
             if (result == 1 && safeThis)
