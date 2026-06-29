@@ -150,4 +150,4 @@ Use the **Save** / **Delete** buttons and the preset dropdown in the plugin wind
 
 ## JUCE licensing
 
-Built with [JUCE](https://juce.com). JUCE is free for personal/non-commercial use under the **JUCE Personal** tier (GPLv3). Commercial distribution requires a JUCE license or releasing the full source under GPLv3.
+Built with [JUCE](https://juce.com). This project is licensed under the **GNU AGPL-3.0-or-later**, which is compatible with JUCE's open-source AGPL-3.0 license. Commercial distribution without releasing source requires a JUCE commercial license.

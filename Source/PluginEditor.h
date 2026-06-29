@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2025 sahko123 — Dialogue Leveler VST3
 #pragma once
 #include <JuceHeader.h>

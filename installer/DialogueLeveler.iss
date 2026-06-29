@@ -1,5 +1,5 @@
 ; Dialogue Leveler — Inno Setup 6 installer script
-; SPDX-License-Identifier: GPL-3.0-only
+; SPDX-License-Identifier: AGPL-3.0-or-later
 ; Copyright (c) 2025 sahko123
 ;
 ; Build from repo root:
