@@ -768,6 +768,20 @@ void DialogueLevelerAudioProcessorEditor::deletePreset()
 {
     const juce::String name = presetBox.getSelectedItemText();
     if (name.isEmpty()) return;
-    getPresetsDir().getChildFile(name + ".xml").deleteFile();
-    refreshPresetList();
+
+    juce::Component::SafePointer<DialogueLevelerAudioProcessorEditor> safeThis(this);
+    juce::AlertWindow::showOkCancelBox(
+        juce::MessageBoxIconType::WarningIcon,
+        "Delete Preset",
+        "Delete \"" + name + "\"? This cannot be undone.",
+        "Delete", "Cancel",
+        nullptr,
+        juce::ModalCallbackFunction::create([safeThis, name](int result)
+        {
+            if (result == 1 && safeThis)
+            {
+                safeThis->getPresetsDir().getChildFile(name + ".xml").deleteFile();
+                safeThis->refreshPresetList();
+            }
+        }));
 }
