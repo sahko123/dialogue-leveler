@@ -16,6 +16,10 @@
 // Usage: call prepare() once from prepareToPlay(), setWindowSamples() when the
 // detection-window parameter changes, then processSample() per sample on the
 // mono-averaged input and getLoudnessDb() to read the current level in LUFS.
+//
+// Thread safety: NOT thread-safe. All methods (including getLoudnessDb / getMeanSquare)
+// must be called from the same thread (typically the audio thread). Copy results to
+// an atomic before sharing with the GUI thread.
 
 class LoudnessDetector
 {
@@ -38,12 +42,6 @@ public:
         if (buffer.empty()) return;
         const int clamped = juce::jlimit(1, bufferSize, samples);
         if (clamped == windowSamples) return;
-        if (clamped > windowSamples)
-        {
-            // Zero-fill newly included slots so stale data doesn't inflate the sum
-            for (int i = windowSamples; i < clamped; ++i)
-                buffer[static_cast<size_t>((writePos - 1 - i + bufferSize) % bufferSize)] = 0.0f;
-        }
         windowSamples = clamped;
         updateDriftInterval();
         recomputeRunningSum();
@@ -159,7 +157,9 @@ private:
         // Fire the drift-correction recompute at most once per second, but at
         // least 8× per window so short windows don't accumulate excessive float error.
         driftRecomputeInterval = juce::jmax(1,
-            juce::jmin(static_cast<int>(cachedSampleRate), windowSamples * 8));
+            juce::jmin(static_cast<int>(cachedSampleRate),
+                       static_cast<int>(juce::jmin(static_cast<int64_t>(windowSamples) * 8,
+                                                   static_cast<int64_t>(INT_MAX)))));
         recomputeCountdown = juce::jmin(recomputeCountdown, driftRecomputeInterval);
     }
 
