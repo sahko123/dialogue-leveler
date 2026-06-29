@@ -376,7 +376,8 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const int    entryHoldRemain  = gateHoldSamplesRemaining;
 
     // ── Per-sample DSP loop ──────────────────────────────────────────────────
-    float lastMeasuredDb = -100.0f;
+    float lastMeasuredDb  = -100.0f;
+    bool  lastLimiterDriving = false;
     for (int s = 0; s < numSamples; ++s)
     {
         // 1. Apply pre-gain in-place, then average to mono for detection
@@ -456,6 +457,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         const float peakCap         = peakLimitThresh - trimDb - peakEnvDb;
         const float effectivePeakCap = juce::jmin(peakCap, blockPeakCap - trimDb);
         const bool  limiterDriving  = (effectivePeakCap < desiredGainDb);
+        lastLimiterDriving = limiterDriving;
         if (limiterDriving) desiredGainDb = effectivePeakCap;
 
         // 4. One-pole smooth. When the peak limiter is actively clamping, use its
@@ -502,7 +504,8 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     currentAppliedGainDb.store(smoothedGainDb,  std::memory_order_relaxed);
     currentMeasuredLufs .store(lastMeasuredDb,  std::memory_order_relaxed);
     clippingBoost.store(smoothedGainDb >= maxBoostDb - 0.05f, std::memory_order_relaxed);
-    clippingAtten.store(smoothedGainDb <= -maxAttDb  + 0.05f, std::memory_order_relaxed);
+    clippingAtten.store(!lastLimiterDriving && smoothedGainDb <= -maxAttDb + 0.05f,
+                        std::memory_order_relaxed);
 
     // True Peak: 4× oversample the output block, update all-time hold and 3s rolling window
     if (truePeakOversampler)
