@@ -447,8 +447,8 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         //     Takes the tighter of the running per-sample cap and the block pre-scan cap so
         //     the gain starts dropping from sample 0 of any block containing a peak.
         //     Active even during gate-freeze so transients can't sneak through silence.
-        const float trimDb          = juce::Decibels::gainToDecibels(
-                                          outputTrimGain.getCurrentValue());
+        const float trimLinear      = outputTrimGain.getNextValue();
+        const float trimDb          = juce::Decibels::gainToDecibels(trimLinear);
         const float peakEnvDb       = peakEnv_ > 1e-7f
             ? juce::Decibels::gainToDecibels(peakEnv_) : -100.0f;
         const float peakCap         = peakLimitThresh - trimDb - peakEnvDb;
@@ -471,7 +471,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         //    sample that was delayed by currentLookaheadSamples, so correction
         //    arrives slightly before the event that triggered it.
         const float linearGain =
-            juce::Decibels::decibelsToGain(smoothedGainDb) * outputTrimGain.getNextValue();
+            juce::Decibels::decibelsToGain(smoothedGainDb) * trimLinear;
 
         if (currentLookaheadSamples > 0)
         {
