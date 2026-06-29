@@ -27,7 +27,8 @@ public:
         buffer.assign(static_cast<size_t>(maxSamples), 0.0f);
         bufferSize = maxSamples;
         windowSamples = juce::jlimit(1, bufferSize, windowSamples);
-        driftRecomputeInterval = juce::jmax(1, static_cast<int>(sampleRate));
+        cachedSampleRate = sampleRate;
+        updateDriftInterval();
         computeKWeightingCoeffs(sampleRate);
         reset();
     }
@@ -44,6 +45,7 @@ public:
                 buffer[static_cast<size_t>((writePos - 1 - i + bufferSize) % bufferSize)] = 0.0f;
         }
         windowSamples = clamped;
+        updateDriftInterval();
         recomputeRunningSum();
     }
 
@@ -152,11 +154,21 @@ private:
         if (runningSum < 0.0) runningSum = 0.0;
     }
 
+    void updateDriftInterval() noexcept
+    {
+        // Fire the drift-correction recompute at most once per second, but at
+        // least 8× per window so short windows don't accumulate excessive float error.
+        driftRecomputeInterval = juce::jmax(1,
+            juce::jmin(static_cast<int>(cachedSampleRate), windowSamples * 8));
+        recomputeCountdown = juce::jmin(recomputeCountdown, driftRecomputeInterval);
+    }
+
     std::vector<float> buffer;
     int    bufferSize             = 1;
     int    windowSamples          = 1;
     int    writePos               = 0;
     double runningSum             = 0.0;
+    double cachedSampleRate       = 44100.0;
     int    driftRecomputeInterval = 44100;
     int    recomputeCountdown     = 44100;
 
