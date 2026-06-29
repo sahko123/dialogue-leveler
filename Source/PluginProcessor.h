@@ -89,7 +89,6 @@ private:
     std::atomic<float>* pPreGain          = nullptr;
     std::atomic<float>* pStartingGain     = nullptr;
     std::atomic<float>* pPeakLimit        = nullptr;
-    std::atomic<float>* pBypass           = nullptr;
 
     // Welford online mean state — audio thread only, no atomics needed
     uint64_t avgGainCount_ = 0;

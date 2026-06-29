@@ -112,7 +112,6 @@ DialogueLevelerAudioProcessor::DialogueLevelerAudioProcessor()
     pPreGain         = apvts.getRawParameterValue("preGain");
     pStartingGain    = apvts.getRawParameterValue("startingGain");
     pPeakLimit       = apvts.getRawParameterValue("peakLimit");
-    pBypass          = apvts.getRawParameterValue("bypass");
 
     // Catch parameter-ID typos at construction time, not during live audio
     jassert(pTargetLevel     != nullptr);
@@ -128,7 +127,6 @@ DialogueLevelerAudioProcessor::DialogueLevelerAudioProcessor()
     jassert(pPreGain         != nullptr);
     jassert(pStartingGain    != nullptr);
     jassert(pPeakLimit       != nullptr);
-    jassert(pBypass          != nullptr);
 }
 
 DialogueLevelerAudioProcessor::~DialogueLevelerAudioProcessor() {}
