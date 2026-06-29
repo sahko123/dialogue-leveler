@@ -308,9 +308,8 @@ void DialogueLevelerAudioProcessorEditor::paint(juce::Graphics& g)
     const float maxAtten     = proc.apvts.getRawParameterValue("maxAttenuation")->load(std::memory_order_relaxed);
     const float targetLufs   = proc.apvts.getRawParameterValue("targetLufs")->load(std::memory_order_relaxed);
     const float gateThreshDb = proc.apvts.getRawParameterValue("gateThreshold")->load(std::memory_order_relaxed);
-    const float graphRange   = juce::jmax(maxBoost, maxAtten) * 1.1f;
-    if (graphRange >= 0.1f)
-        paintCombined(g, { 0, kCombY, W, kCombH }, targetLufs, gateThreshDb, graphRange);
+    const float graphRange   = juce::jmax(maxBoost, maxAtten, 1.0f) * 1.1f;
+    paintCombined(g, { 0, kCombY, W, kCombH }, targetLufs, gateThreshDb, graphRange);
 
     // Meter separator lines
     constexpr int kMeterY = kCombY + kCombH + 4;  // = 177, unchanged
