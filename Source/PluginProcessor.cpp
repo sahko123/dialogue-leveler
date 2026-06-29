@@ -637,6 +637,10 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
         juce::Decibels::decibelsToGain(pOutputTrim->load(std::memory_order_relaxed)));
     outputTrimGain.skip(numSamples);
 
+    const int gateHoldSamplesBp = juce::roundToInt(
+        pGateHold->load(std::memory_order_relaxed) * currentSampleRate / 1000.0f);
+    gateHoldSamplesRemaining = juce::jmin(gateHoldSamplesRemaining, gateHoldSamplesBp);
+
     for (int s = 0; s < numSamples; ++s)
     {
         // Apply the same pre-gain as the active path so the LUFS meter is consistent
@@ -654,6 +658,19 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
 
         if (primingSamplesRemaining > 0)
             --primingSamplesRemaining;
+
+        // Mirror gate hold countdown so un-bypass doesn't start with a stale counter.
+        if (numInputChannels >= 2)
+        {
+            const double ms = (detector.getMeanSquare() + detectorR.getMeanSquare()) * 0.5;
+            const float measuredDbBp = ms < 1e-10 ? -100.0f
+                : static_cast<float>(-0.691 + 10.0 * std::log10(ms));
+            const float gateThreshBp = pGateThreshold->load(std::memory_order_relaxed);
+            if (measuredDbBp < gateThreshBp)
+            { if (gateHoldSamplesRemaining > 0) --gateHoldSamplesRemaining; }
+            else
+                gateHoldSamplesRemaining = gateHoldSamplesBp;
+        }
 
         // Keep lookahead delay line primed with pre-gained samples so un-bypass is seamless.
         // processBlock writes pre-gained samples to this buffer, so we must match that here.
