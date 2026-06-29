@@ -549,7 +549,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
                 tp = std::max(tp, std::abs(ptr[s]));
         }
 
-        const float frameDb = tp > 0.0f ? juce::Decibels::gainToDecibels(tp) : -200.0f;
+        const float frameDb = tp > 1e-7f ? juce::Decibels::gainToDecibels(tp) : -200.0f;
 
         // All-time hold
         if (frameDb > peakOutputDb.load(std::memory_order_relaxed))
