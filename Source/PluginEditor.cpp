@@ -221,6 +221,9 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
 
     refreshPresetList();
 
+    graphGain.fill(-100.0f);
+    graphLufs.fill(-100.0f);
+
     setOpaque(true);
     setSize(975, 420);
     startTimerHz(30);
