@@ -577,7 +577,14 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
                       currentWindowSamples, gateHoldSamplesRemaining,
                       lookaheadBuffer, lookaheadWritePos, startGainDbB, peakEnv_);
     if (resetPeakNeeded.exchange(false, std::memory_order_acq_rel))
+    {
         peakOutputDb.store(-144.0f, std::memory_order_relaxed);
+        recentPeakDb.store(-144.0f, std::memory_order_relaxed);
+        std::fill(tpWindow.begin(), tpWindow.end(), -144.0f);
+        tpWindowHead   = 0;
+        tpWindowFilled = 0;
+        if (truePeakOversampler) truePeakOversampler->reset();
+    }
     if (resetAvgNeeded.exchange(false, std::memory_order_acq_rel))
     {
         avgGainCount_ = 0;
