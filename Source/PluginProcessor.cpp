@@ -140,8 +140,8 @@ double DialogueLevelerAudioProcessor::getTailLengthSeconds() const
 {
     // Tail = lookahead samples still buffered after the host's last input sample.
     // Use the atomic mirrors so this is safe to call from any thread.
-    return static_cast<double>(tailLookaheadSamples.load(std::memory_order_relaxed))
-           / tailSampleRate.load(std::memory_order_relaxed);
+    const double sr = tailSampleRate.load(std::memory_order_relaxed);
+    return sr > 0.0 ? static_cast<double>(tailLookaheadSamples.load(std::memory_order_relaxed)) / sr : 0.0;
 }
 
 int  DialogueLevelerAudioProcessor::getNumPrograms()                            { return 1; }
