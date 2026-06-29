@@ -33,7 +33,7 @@ public:
 
     void setWindowSamples(int samples)
     {
-        jassert(bufferSize > 0 && !buffer.empty()); // prepare() must be called first
+        if (buffer.empty()) return;
         const int clamped = juce::jlimit(1, bufferSize, samples);
         if (clamped == windowSamples) return;
         if (clamped > windowSamples)
@@ -140,6 +140,7 @@ private:
 
     void recomputeRunningSum() noexcept
     {
+        if (buffer.empty()) return;
         runningSum = 0.0;
         for (int i = 0; i < windowSamples; ++i)
         {
