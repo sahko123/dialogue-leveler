@@ -725,8 +725,10 @@ void DialogueLevelerAudioProcessorEditor::refreshPresetList()
     presetBox.clear(juce::dontSendNotification);
     const juce::File dir = getPresetsDir();
     if (!dir.exists()) return;
+    auto files = dir.findChildFiles(juce::File::findFiles, false, "*.xml");
+    files.sort();
     int id = 1;
-    for (const auto& f : dir.findChildFiles(juce::File::findFiles, false, "*.xml"))
+    for (const auto& f : files)
         presetBox.addItem(f.getFileNameWithoutExtension(), id++);
 }
 
