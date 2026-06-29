@@ -539,7 +539,9 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         avgGainDb.store(static_cast<float>(avgGainMean_), std::memory_order_relaxed);
     }
 
-    // Push one frame to the scrolling graph FIFO (non-blocking drop if full)
+    // Push one frame to the scrolling graph FIFO (non-blocking drop if full).
+    // Handle both ring segments: when the FIFO wraps, prepareToWrite returns n1=0,n2=1.
+    // Only writing to s1 when n1>0 would commit an uninitialized slot every 1024 blocks.
     {
         int s1, n1, s2, n2;
         gainFifo.prepareToWrite(1, s1, n1, s2, n2);
@@ -547,8 +549,10 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         if (entryMeasuredDb >= gateThreshDb) gs = GateState::Active;
         else if (entryHoldRemain > 0)        gs = GateState::InHold;
         else                                 gs = GateState::Frozen;
-        if (n1 > 0) gainFifoBuffer[s1] = { smoothedGainDb, lastMeasuredDb, gs };
-        gainFifo.finishedWrite(n1 + n2);
+        const GainFrame frame { smoothedGainDb, lastMeasuredDb, gs };
+        if      (n1 > 0) gainFifoBuffer[s1] = frame;
+        else if (n2 > 0) gainFifoBuffer[s2] = frame;
+        gainFifo.finishedWrite((n1 > 0) ? n1 : (n2 > 0 ? n2 : 0));
     }
 }
 
@@ -626,8 +630,10 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
     {
         int s1, n1, s2, n2;
         gainFifo.prepareToWrite(1, s1, n1, s2, n2);
-        if (n1 > 0) gainFifoBuffer[s1] = { 0.0f, bypassMeasuredDb, GateState::Active };
-        gainFifo.finishedWrite(n1 + n2);
+        const GainFrame bypassFrame { 0.0f, bypassMeasuredDb, GateState::Active };
+        if      (n1 > 0) gainFifoBuffer[s1] = bypassFrame;
+        else if (n2 > 0) gainFifoBuffer[s2] = bypassFrame;
+        gainFifo.finishedWrite((n1 > 0) ? n1 : (n2 > 0 ? n2 : 0));
     }
 }
 
