@@ -592,16 +592,24 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
         avgGainDb.store(-999.0f, std::memory_order_relaxed);
     }
 
+    // Advance the pre-gain smoother so its internal state stays consistent with
+    // the active path. Without this, a click occurs when un-bypassing during a ramp.
+    preGainSmoothed.setTargetValue(
+        juce::Decibels::decibelsToGain(pPreGain->load(std::memory_order_relaxed)));
+
     for (int s = 0; s < numSamples; ++s)
     {
+        // Apply the same pre-gain as the active path so the LUFS meter is consistent
+        // across bypass toggles. Without this, the meter jumps if Pre-Gain != 0 dB.
+        const float pgLinear = preGainSmoothed.getNextValue();
         if (numInputChannels >= 2)
         {
-            detector.processSample(buffer.getReadPointer(0)[s]);
-            detectorR.processSample(buffer.getReadPointer(1)[s]);
+            detector.processSample(buffer.getReadPointer(0)[s] * pgLinear);
+            detectorR.processSample(buffer.getReadPointer(1)[s] * pgLinear);
         }
         else
         {
-            detector.processSample(buffer.getReadPointer(0)[s]);
+            detector.processSample(buffer.getReadPointer(0)[s] * pgLinear);
         }
 
         if (primingSamplesRemaining > 0)
