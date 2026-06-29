@@ -703,8 +703,9 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
     { return v <= -100.0f ? "---" : (v >= 0.0f ? "+" : "") + juce::String(v, 1) + " dB"; };
     avgGainVal.setText(avgStr(avg), juce::dontSendNotification);
     avgGainVal.setColour(juce::Label::textColourId,
-                         avg > 0.5f  ? kBoost :
-                         avg < -0.5f ? kCut   : kTextHi);
+                         avg <= -100.0f ? kTextHi :
+                         avg >   0.5f   ? kBoost  :
+                         avg <  -0.5f   ? kCut    : kTextHi);
 
     repaint();
 }
