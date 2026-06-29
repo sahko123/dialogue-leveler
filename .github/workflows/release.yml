@@ -38,7 +38,7 @@ jobs:
       - name: Cache JUCE download
         uses: actions/cache@v4
         with:
-          path: build/_deps
+          path: build/_deps/juce-src
           key: juce-8.0.14-${{ runner.os }}
 
       - name: Validate JUCE cache
