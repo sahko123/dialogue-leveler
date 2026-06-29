@@ -172,6 +172,7 @@ void DialogueLevelerAudioProcessor::prepareToPlay(double sampleRate, int samples
     primingSamplesRemaining  = currentWindowSamples;
     smoothedGainDb           = startGainDb;
     gateHoldSamplesRemaining = 0;
+    peakEnv_ = 0.0f;
 
     // Reset peak/avg stats on each prepare (new playback session)
     peakOutputDb .store(-144.0f, std::memory_order_relaxed);
