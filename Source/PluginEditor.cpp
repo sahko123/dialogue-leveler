@@ -316,8 +316,8 @@ void DialogueLevelerAudioProcessorEditor::paint(juce::Graphics& g)
     constexpr int kMeterY = kCombY + kCombH + 4;  // = 177, unchanged
     g.setColour(kGridLine);
     const int col = W / 3;
-    g.drawVerticalLine(col,   kMeterY, kMeterY + 36);
-    g.drawVerticalLine(col*2, kMeterY, kMeterY + 36);
+    g.drawVerticalLine(col,   kMeterY, kMeterY + 34); // 34 = captH(12) + valH(22)
+    g.drawVerticalLine(col*2, kMeterY, kMeterY + 34);
 
     // Stats row dividers (three columns)
     constexpr int kStatsY = kMeterY + 36 + 4;
