@@ -187,8 +187,9 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
     presetBox.onChange = [this] {
         const juce::String name = presetBox.getSelectedItemText();
         if (name.isEmpty()) return;
-        const juce::File f = getPresetsDir().getChildFile(name + ".xml");
-        if (f.existsAsFile())
+        const juce::File dir = getPresetsDir();
+        const juce::File f = dir.getChildFile(name + ".xml");
+        if (f.isAChildOf(dir) && f.existsAsFile())
             if (auto xml = juce::XmlDocument::parse(f))
                 if (xml->hasTagName(proc.apvts.state.getType()))
                 {
