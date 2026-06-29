@@ -596,15 +596,18 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
         avgGainDb.store(-999.0f, std::memory_order_relaxed);
     }
 
-    // Advance the pre-gain smoother so its internal state stays consistent with
-    // the active path. Without this, a click occurs when un-bypassing during a ramp.
+    // Advance both smoothers so their internal state stays consistent with the active path.
+    // Without this, a click occurs when un-bypassing during a parameter ramp.
     preGainSmoothed.setTargetValue(
         juce::Decibels::decibelsToGain(pPreGain->load(std::memory_order_relaxed)));
+    outputTrimGain.setTargetValue(
+        juce::Decibels::decibelsToGain(pOutputTrim->load(std::memory_order_relaxed)));
+    outputTrimGain.skip(numSamples);
 
     for (int s = 0; s < numSamples; ++s)
     {
         // Apply the same pre-gain as the active path so the LUFS meter is consistent
-        // across bypass toggles. Without this, the meter jumps if Pre-Gain != 0 dB.
+        // across bypass toggles and so the lookahead buffer holds pre-gained samples.
         const float pgLinear = preGainSmoothed.getNextValue();
         if (numInputChannels >= 2)
         {
@@ -618,16 +621,14 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
 
         if (primingSamplesRemaining > 0)
             --primingSamplesRemaining;
-    }
 
-    // Keep the lookahead delay line primed so un-bypass is seamless.
-    // Without this, stale/zero samples would play out on the first post-bypass block.
-    if (currentLookaheadSamples > 0)
-    {
-        for (int s = 0; s < numSamples; ++s)
+        // Keep lookahead delay line primed with pre-gained samples so un-bypass is seamless.
+        // processBlock writes pre-gained samples to this buffer, so we must match that here.
+        if (currentLookaheadSamples > 0)
         {
-            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
-                lookaheadBuffer.setSample(ch, lookaheadWritePos, buffer.getSample(ch, s));
+            for (int ch = 0; ch < numInputChannels; ++ch)
+                lookaheadBuffer.setSample(ch, lookaheadWritePos,
+                                          buffer.getSample(ch, s) * pgLinear);
             lookaheadWritePos = (lookaheadWritePos + 1) % maxDelaySamples;
         }
     }
