@@ -73,7 +73,7 @@ jobs:
       - name: Verify VST3 artifact
         shell: pwsh
         run: |
-          $dll = "build\DialogueLeveler_artefacts\Release\VST3\DialogueLeveler.vst3\Contents\x86_64-win\DialogueLeveler.vst3"
+          $dll = "build\DialogueLeveler_artefacts\Release\VST3\Dialogue Leveler.vst3\Contents\x86_64-win\Dialogue Leveler.vst3"
           if (-not (Test-Path $dll)) { throw "VST3 artifact not found: $dll" }
 
       - name: Build installer

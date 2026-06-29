@@ -14,7 +14,7 @@
 #endif
 #define AppURL      "https://github.com/sahko123/dialogue-leveler"
 ; NOTE: VST3Src points to the Release build output. Run cmake --build with --config Release before iscc.
-#define VST3Src     "..\build\DialogueLeveler_artefacts\Release\VST3\DialogueLeveler.vst3"
+#define VST3Src     "..\build\DialogueLeveler_artefacts\Release\VST3\Dialogue Leveler.vst3"
 
 [Setup]
 ; Unique ID — do not change once published (used for upgrades/uninstall tracking)
