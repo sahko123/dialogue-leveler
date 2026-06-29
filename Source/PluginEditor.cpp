@@ -545,7 +545,7 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
     // ── LUFS waveform (three segments: green=Active, orange=InHold, dim=Frozen) ─
     if (numPts >= 2)
     {
-        juce::Path pathActive, pathHold, pathFrozen;
+        pathActive.clear(); pathHold.clear(); pathFrozen.clear();
         bool sActive = false, sHold = false, sFrozen = false;
         for (int i = 0; i < numPts; ++i)
         {
@@ -580,7 +580,7 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
     // ── Gain waveform (cyan, right-axis scale) ────────────────────────────────
     if (numPts >= 2)
     {
-        juce::Path gainPath;
+        gainPath.clear();
         bool started = false;
         for (int i = 0; i < numPts; ++i)
         {

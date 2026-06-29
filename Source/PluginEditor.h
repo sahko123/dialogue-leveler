@@ -65,6 +65,9 @@ private:
     int  graphHead = 0;
     bool graphFull = false;
 
+    // ── Reused Path objects for paintCombined (avoids per-frame heap allocation) ─
+    mutable juce::Path pathActive, pathHold, pathFrozen, gainPath;
+
     // ── Clip LED state (held for 500 ms after last clip) ─────────────────────
     double lastBoostClipMs = -9999.0;
     double lastAttenClipMs = -9999.0;
