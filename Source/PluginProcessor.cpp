@@ -383,6 +383,7 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     outputTrimGain.setTargetValue(juce::Decibels::decibelsToGain(outputTrimDb));
 
     const int gateHoldSamples = juce::roundToInt(gateHoldMs * currentSampleRate / 1000.0f);
+    gateHoldSamplesRemaining  = juce::jmin(gateHoldSamplesRemaining, gateHoldSamples);
 
     // Capture gate state at block entry so the FIFO frame represents the state the
     // block started in rather than the state it ended in (avoids one-block display lag).
