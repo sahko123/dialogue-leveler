@@ -26,8 +26,8 @@ juce_add_plugin(DialogueLeveler
     PLUGIN_MANUFACTURER_CODE    Sahk
     PLUGIN_CODE                 Dlvl
     FORMATS                     VST3 Standalone
-    PRODUCT_NAME                "DialogueLeveler"
-    PLUGIN_NAME                 "DialogueLeveler"
+    PRODUCT_NAME                "Dialogue Leveler"
+    PLUGIN_NAME                 "Dialogue Leveler"
     DESCRIPTION                 "Automatic dialogue loudness leveler"
     VST3_CATEGORIES             "Fx" "Dynamics"
     IS_SYNTH                    FALSE
