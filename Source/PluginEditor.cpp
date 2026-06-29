@@ -673,8 +673,8 @@ void DialogueLevelerAudioProcessorEditor::timerCallback()
 
     // Update clip LED timestamps
     const double now = juce::Time::getMillisecondCounterHiRes();
-    if (proc.clippingBoost.load(std::memory_order_relaxed)) lastBoostClipMs = now;
-    if (proc.clippingAtten.load(std::memory_order_relaxed)) lastAttenClipMs = now;
+    if (proc.clippingBoost.exchange(false, std::memory_order_acq_rel)) lastBoostClipMs = now;
+    if (proc.clippingAtten.exchange(false, std::memory_order_acq_rel)) lastAttenClipMs = now;
 
     // Update meter labels
     const float inLufs  = proc.getMeasuredLufs();
