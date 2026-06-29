@@ -659,12 +659,19 @@ void DialogueLevelerAudioProcessor::processBlockBypassed(juce::AudioBuffer<float
             --primingSamplesRemaining;
 
         // Mirror gate hold countdown so un-bypass doesn't start with a stale counter.
-        if (numInputChannels >= 2)
         {
-            const double ms = (detector.getMeanSquare() + detectorR.getMeanSquare()) * 0.5;
-            const float measuredDbBp = ms < 1e-10 ? -100.0f
-                : static_cast<float>(-0.691 + 10.0 * std::log10(ms));
             const float gateThreshBp = pGateThreshold->load(std::memory_order_relaxed);
+            float measuredDbBp;
+            if (numInputChannels >= 2)
+            {
+                const double ms = (detector.getMeanSquare() + detectorR.getMeanSquare()) * 0.5;
+                measuredDbBp = ms < 1e-10 ? -100.0f
+                    : static_cast<float>(-0.691 + 10.0 * std::log10(ms));
+            }
+            else
+            {
+                measuredDbBp = detector.getLoudnessDb();
+            }
             if (measuredDbBp < gateThreshBp)
             { if (gateHoldSamplesRemaining > 0) --gateHoldSamplesRemaining; }
             else
