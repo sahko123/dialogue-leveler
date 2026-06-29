@@ -32,6 +32,7 @@ jobs:
       # Cache the JUCE source download — ~450 MB, only re-fetched when JUCE version changes.
       # Key is pinned to the JUCE tag rather than CMakeLists.txt hash so that bumping the
       # plugin version number (which changes CMakeLists.txt) does not invalidate the cache.
+      # IMPORTANT: when bumping JUCE, update BOTH this key and the GIT_TAG SHA in CMakeLists.txt.
       - name: Cache JUCE download
         uses: actions/cache@v4
         with:
