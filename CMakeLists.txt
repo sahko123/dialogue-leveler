@@ -38,7 +38,7 @@ juce_add_plugin(DialogueLeveler
     PRODUCT_NAME                "Dialogue Leveler"
     PLUGIN_NAME                 "Dialogue Leveler"
     DESCRIPTION                 "Automatic dialogue loudness leveler"
-    VST3_CATEGORIES             "Fx" "Dynamics"
+    VST3_CATEGORIES             "Fx|Dynamics"
     IS_SYNTH                    FALSE
     NEEDS_MIDI_INPUT            FALSE
     NEEDS_MIDI_OUTPUT           FALSE
