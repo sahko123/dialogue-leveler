@@ -45,7 +45,7 @@ SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
 
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppVersion}.0
 VersionInfoDescription={#AppName} VST3 Plugin Installer
 VersionInfoCompany={#AppPublisher}
 VersionInfoCopyright=Copyright (C) 2025 {#AppPublisher}
@@ -56,17 +56,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 ; Entire VST3 bundle — recurse so future bundle files are included automatically
 Source: "{#VST3Src}\*"; \
-    DestDir: "{commonpf64}\VST3\DialogueLeveler.vst3"; \
+    DestDir: "{app}\DialogueLeveler.vst3"; \
     Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
 ; Remove the entire bundle before each install so stale files from older
 ; versions don't persist inside the bundle and confuse DAW plugin scanners.
-Type: filesandordirs; Name: "{commonpf64}\VST3\DialogueLeveler.vst3"
+Type: filesandordirs; Name: "{app}\DialogueLeveler.vst3"
 
 [UninstallDelete]
 ; Remove the entire bundle folder on uninstall
-Type: filesandordirs; Name: "{commonpf64}\VST3\DialogueLeveler.vst3"
+Type: filesandordirs; Name: "{app}\DialogueLeveler.vst3"
 
 [Messages]
 WelcomeLabel1=Welcome to the {#AppName} installer
