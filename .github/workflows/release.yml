@@ -57,7 +57,7 @@ jobs:
         run: cmake --build build --config Release --parallel
 
       - name: Install Inno Setup
-        run: choco install innosetup --version=6.3.3 --no-progress -y
+        run: choco install innosetup --no-progress -y
 
       # Strip the leading 'v' from the tag (v1.0.0 → 1.0.0)
       - name: Get version from tag
