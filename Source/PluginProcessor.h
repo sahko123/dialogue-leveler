@@ -63,6 +63,7 @@ public:
     std::atomic<float> avgGainDb     { -999.0f };
     std::atomic<bool>  resetPeakNeeded { false };
     std::atomic<bool>  resetAvgNeeded  { false };
+    std::atomic<bool>  resetNeeded     { false };
 
     // Lock-free FIFO for the scrolling gain graph (one frame per audio block).
     // GUI timer drains it; audio thread fills it.
@@ -132,8 +133,7 @@ private:
     std::atomic<double> tailSampleRate      { 44100.0 };
     std::atomic<int>    tailLookaheadSamples { 0 };
 
-    // Set on message thread (setStateInformation), checked+cleared on audio thread
-    std::atomic<bool> resetNeeded { false };
+    // resetNeeded: set on message thread (preset load), checked+cleared on audio thread
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DialogueLevelerAudioProcessor)
 };
