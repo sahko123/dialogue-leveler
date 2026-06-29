@@ -20,6 +20,7 @@ FetchContent_Declare(
     GIT_TAG        2cdfca8feb300fb424002ba2c2751569e5bacb64  # JUCE 8.0.14
     # GIT_SHALLOW must be FALSE when GIT_TAG is a raw SHA: GitHub rejects shallow
     # fetches of non-advertised objects. The cache step in CI absorbs the cost.
+    GIT_SHALLOW    FALSE
 )
 FetchContent_MakeAvailable(JUCE)
 
