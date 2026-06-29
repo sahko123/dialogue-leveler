@@ -96,4 +96,6 @@ jobs:
           gh release create $env:TAG_NAME `
             --title "Dialogue Leveler $env:VERSION" `
             --generate-notes `
+            --draft `
             $artifact
+          gh release edit $env:TAG_NAME --draft=false
