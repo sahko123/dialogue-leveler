@@ -365,7 +365,6 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     // Set Output Trim target — SmoothedValue ramps to it over 20 ms (no zipper)
     outputTrimGain.setTargetValue(juce::Decibels::decibelsToGain(outputTrimDb));
 
-    const float invInputChannels = 1.0f / static_cast<float>(numInputChannels);
     const int gateHoldSamples = juce::roundToInt(gateHoldMs * currentSampleRate / 1000.0f);
 
     // Capture gate state at block entry so the FIFO frame represents the state the
