@@ -53,15 +53,10 @@ VersionInfoCopyright=Copyright (C) 2025 {#AppPublisher}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-; VST3 bundle — main plugin binary
-Source: "{#VST3Src}\Contents\x86_64-win\DialogueLeveler.vst3"; \
-    DestDir: "{commonpf64}\VST3\DialogueLeveler.vst3\Contents\x86_64-win"; \
-    Flags: ignoreversion
-
-; VST3 bundle — module metadata (required by VST3 spec)
-Source: "{#VST3Src}\Contents\Resources\moduleinfo.json"; \
-    DestDir: "{commonpf64}\VST3\DialogueLeveler.vst3\Contents\Resources"; \
-    Flags: ignoreversion
+; Entire VST3 bundle — recurse so future bundle files are included automatically
+Source: "{#VST3Src}\*"; \
+    DestDir: "{commonpf64}\VST3\DialogueLeveler.vst3"; \
+    Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
 ; Remove the entire bundle before each install so stale files from older
