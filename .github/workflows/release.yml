@@ -98,4 +98,6 @@ jobs:
             --generate-notes `
             --draft `
             $artifact
+          if ($LASTEXITCODE -ne 0) { Write-Error "gh release create failed"; exit 1 }
           gh release edit $env:TAG_NAME --draft=false
+          if ($LASTEXITCODE -ne 0) { Write-Error "Failed to publish release — draft not removed"; exit 1 }
