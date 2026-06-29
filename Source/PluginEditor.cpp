@@ -195,6 +195,11 @@ DialogueLevelerAudioProcessorEditor::DialogueLevelerAudioProcessorEditor(
                 {
                     proc.apvts.replaceState(juce::ValueTree::fromXml(*xml));
                     proc.resetNeeded.store(true, std::memory_order_release);
+                    graphHead = 0;
+                    graphFull = false;
+                    graphGain.fill(-100.0f);
+                    graphLufs.fill(-100.0f);
+                    graphGate.fill(GateState::Active);
                 }
     };
     addAndMakeVisible(presetBox);
