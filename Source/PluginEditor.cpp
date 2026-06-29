@@ -748,7 +748,8 @@ void DialogueLevelerAudioProcessorEditor::savePreset()
             if (safeThis == nullptr) return;
             if (result == 1 && safeW != nullptr)
             {
-                const juce::String name = safeW->getTextEditorContents("name").trim();
+                const juce::String name = juce::File::createLegalFileName(
+                    safeW->getTextEditorContents("name").trim());
                 if (!name.isEmpty())
                 {
                     const juce::File dir = safeThis->getPresetsDir();
