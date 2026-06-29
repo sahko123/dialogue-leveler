@@ -462,8 +462,11 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
             : releaseCoeff;
         smoothedGainDb   += (1.0f - coeff) * (desiredGainDb - smoothedGainDb);
 
-        // 5. Hard clamp handles max-boost/attenuation param changes mid-stream
-        smoothedGainDb = juce::jlimit(-maxAttDb, maxBoostDb, smoothedGainDb);
+        // 5. Hard clamp handles max-boost/attenuation param changes mid-stream.
+        //    When the peak limiter is driving, skip the lower bound so it can always
+        //    attenuate enough to stay below the peak threshold.
+        const float lowerBound = limiterDriving ? -144.0f : -maxAttDb;
+        smoothedGainDb = juce::jlimit(lowerBound, maxBoostDb, smoothedGainDb);
 
         // 6. Apply gain to audio — through lookahead delay if enabled.
         //    Detection ran on the un-delayed sample above; gain is applied to the
