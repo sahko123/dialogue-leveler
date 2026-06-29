@@ -608,7 +608,7 @@ void DialogueLevelerAudioProcessorEditor::paintCombined(
     //   → Active : dim     (gate released, leveler re-engaged)
     if (numPts >= 2)
     {
-        GateState prev = graphGate[si % kGraphPoints];
+        GateState prev = graphGate[si];
         for (int i = 1; i < numPts; ++i)
         {
             const int idx = (si + i) % kGraphPoints;
