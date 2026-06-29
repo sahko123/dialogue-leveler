@@ -27,7 +27,6 @@ public:
     void paint(juce::Graphics&) override;
     void paintOverChildren(juce::Graphics&) override;
     void resized() override;
-    void visibilityChanged() override;
 
 private:
     void timerCallback() override;

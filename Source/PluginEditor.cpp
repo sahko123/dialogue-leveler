@@ -227,12 +227,6 @@ DialogueLevelerAudioProcessorEditor::~DialogueLevelerAudioProcessorEditor()
         s->setLookAndFeel(nullptr);
 }
 
-void DialogueLevelerAudioProcessorEditor::visibilityChanged()
-{
-    if (isVisible())
-        repaint();
-}
-
 //==============================================================================
 void DialogueLevelerAudioProcessorEditor::resized()
 {
