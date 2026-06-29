@@ -347,19 +347,32 @@ void DialogueLevelerAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
     const auto peakEnvRelCoeff  = static_cast<float>(std::exp(-1000.0 / (100.0 * currentSampleRate)));
     const float peakLimitThresh = pPeakLimit->load(std::memory_order_relaxed);
 
-    // Block-level peak pre-scan — find the worst peak anywhere in this block (accounting
-    // for pre-gain) so the limiter can start reducing gain from sample 0 of the block
-    // even when the loudest transient is near the end. This gives automatic intra-block
-    // lookahead (~block_size/sampleRate ms) on top of whatever explicit lookahead is set.
+    // Block-level peak pre-scan — find the worst peak anywhere in this block so the
+    // limiter can start reducing gain from sample 0 even when the loudest transient is
+    // near the end. This gives automatic intra-block lookahead on top of explicit lookahead.
+    // When lookahead is active, scan the delayed samples about to be emitted (already
+    // pre-gained). When lookahead is off, scan the live buffer and scale by pgApprox.
     float blockPeakLinear = 0.0f;
     {
-        const float pgApprox = std::max(preGainSmoothed.getCurrentValue(),
-                                         preGainSmoothed.getTargetValue());
-        for (int ch = 0; ch < numInputChannels; ++ch)
+        if (currentLookaheadSamples > 0)
         {
-            const float* rd = buffer.getReadPointer(ch);
-            for (int s = 0; s < numSamples; ++s)
-                blockPeakLinear = std::max(blockPeakLinear, std::abs(rd[s]) * pgApprox);
+            const int startPos = (lookaheadWritePos + maxDelaySamples - currentLookaheadSamples)
+                                  % maxDelaySamples;
+            for (int ch = 0; ch < numInputChannels; ++ch)
+                for (int s = 0; s < numSamples; ++s)
+                    blockPeakLinear = std::max(blockPeakLinear,
+                        std::abs(lookaheadBuffer.getSample(ch, (startPos + s) % maxDelaySamples)));
+        }
+        else
+        {
+            const float pgApprox = std::max(preGainSmoothed.getCurrentValue(),
+                                             preGainSmoothed.getTargetValue());
+            for (int ch = 0; ch < numInputChannels; ++ch)
+            {
+                const float* rd = buffer.getReadPointer(ch);
+                for (int s = 0; s < numSamples; ++s)
+                    blockPeakLinear = std::max(blockPeakLinear, std::abs(rd[s]) * pgApprox);
+            }
         }
     }
     const float blockPeakDb  = blockPeakLinear > 1e-7f
